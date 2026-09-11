@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- TryOn2Buy brand cream — matches the web app's #ede8df page background
+         and AppColors.background, so the native launch window and the Flutter
+         splash are the same colour with no flash between them. -->
+    <color name="brandBackground">#EDE8DF</color>
+</resources>

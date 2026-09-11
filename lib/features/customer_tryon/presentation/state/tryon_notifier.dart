@@ -1,0 +1,448 @@
+import 'dart:io';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tryon2buy/core/constants/api_endpoints.dart';
+import 'package:tryon2buy/core/errors/failures.dart';
+import 'package:tryon2buy/core/utils/result.dart';
+import '../../data/datasources/history_local_data_source.dart';
+import '../../data/datasources/tryon_remote_data_source.dart';
+import '../../data/datasources/tryon_results_local_data_source.dart';
+import '../../data/repositories/tryon_repository_impl.dart';
+import '../../domain/entities/selfie_record.dart';
+import '../../domain/entities/tryon_result.dart';
+import '../../domain/repositories/i_tryon_repository.dart';
+import '../../domain/usecases/change_background.dart';
+import '../../domain/usecases/generate_virtual_tryon.dart';
+import '../../domain/usecases/modify_outfit_style.dart';
+import 'tryon_state.dart';
+
+// ─── Dependency Providers ──────────────────────────────────────────
+
+final _remoteDataSourceProvider = Provider<TryonRemoteDataSource>((ref) {
+  return TryonRemoteDataSource();
+});
+
+final _repositoryProvider = Provider<ITryonRepository>((ref) {
+  return TryonRepositoryImpl(ref.read(_remoteDataSourceProvider));
+});
+
+final _generateTryonProvider = Provider<GenerateVirtualTryonUseCase>((ref) {
+  return GenerateVirtualTryonUseCase(ref.read(_repositoryProvider));
+});
+
+final _changeBackgroundProvider = Provider<ChangeBackgroundUseCase>((ref) {
+  return ChangeBackgroundUseCase(ref.read(_repositoryProvider));
+});
+
+final _modifyOutfitProvider = Provider<ModifyOutfitStyleUseCase>((ref) {
+  return ModifyOutfitStyleUseCase(ref.read(_repositoryProvider));
+});
+
+final _historyDataSourceProvider = Provider<HistoryLocalDataSource>((ref) {
+  return HistoryLocalDataSource();
+});
+
+final _resultsDataSourceProvider = Provider<TryonResultsLocalDataSource>((ref) {
+  return TryonResultsLocalDataSource();
+});
+
+// ─── Main Notifier ─────────────────────────────────────────────────
+
+/// The single source of truth for the fitting room.
+///
+/// Mirrors the website's `CustomerTryon.jsx`: load the source drape, pick a
+/// photo, "See myself in this", then a carousel of results per selfie with
+/// background and blouse retouching applied on demand.
+///
+/// Two rules every method follows:
+///  * After an `await`, read the *live* [_session] rather than a copy taken
+///    earlier. The shopper can pick a photo while the drape is still loading,
+///    and that pick must not be overwritten by a stale snapshot.
+///  * After an `await`, check [mounted] before assigning `state`. The
+///    provider is autoDispose, so backing out mid-request disposes this
+///    notifier while the request is still in flight.
+class TryonNotifier extends StateNotifier<TryonStudioState> {
+  final ITryonRepository _repository;
+  final GenerateVirtualTryonUseCase _generateTryon;
+  final ChangeBackgroundUseCase _changeBackground;
+  final ModifyOutfitStyleUseCase _modifyOutfit;
+  final HistoryLocalDataSource _historyStore;
+  final TryonResultsLocalDataSource _resultsStore;
+
+  TryonNotifier({
+    required ITryonRepository repository,
+    required GenerateVirtualTryonUseCase generateTryon,
+    required ChangeBackgroundUseCase changeBackground,
+    required ModifyOutfitStyleUseCase modifyOutfit,
+    required HistoryLocalDataSource historyStore,
+    required TryonResultsLocalDataSource resultsStore,
+  })  : _repository = repository,
+        _generateTryon = generateTryon,
+        _changeBackground = changeBackground,
+        _modifyOutfit = modifyOutfit,
+        _historyStore = historyStore,
+        _resultsStore = resultsStore,
+        super(const TryonInitial(StudioSession()));
+
+  StudioSession get _session => state.session;
+
+  // ── Setup ──────────────────────────────────────────────────────────
+
+  /// Opens the room for a merchant drape ([generationId]) or, failing that,
+  /// a bare garment image. Also restores the most recent selfie and, if it
+  /// has results, lands straight on them.
+  Future<void> open({
+    String? generationId,
+    String? garmentUrl,
+    String? category,
+  }) async {
+    final sourceId =
+        (generationId != null && generationId.isNotEmpty) ? generationId : null;
+
+    state = TryonInitial(
+      StudioSession(fallbackGarmentUrl: garmentUrl ?? '', category: category),
+      loadingSource: sourceId != null,
+    );
+
+    final history = await _historyStore.getValidHistory();
+    if (!mounted) return;
+    SelfieRecord? active;
+    for (final r in history) {
+      if (r.isActive) {
+        active = r;
+        break;
+      }
+    }
+
+    // Merge into the live session: a photo picked during the read wins over
+    // the restored one.
+    var session = _session.copyWith(history: history);
+    if (!session.hasSelfie && active != null) {
+      session = session.copyWith(
+        selectedUrl: active.imageUrl,
+        activeHistoryId: active.id,
+      );
+    }
+    state = TryonInitial(session, loadingSource: sourceId != null);
+
+    if (sourceId != null) {
+      final loaded = await _repository.fetchGeneration(sourceId);
+      if (!mounted) return;
+      switch (loaded) {
+        case Success(:final data):
+          state = TryonInitial(_session.copyWith(source: data));
+        case Fail(:final failure):
+          state = TryonInitial(_session, sourceError: failure.message);
+          return;
+      }
+    }
+
+    // Results this selfie already produced (any garment) come back as the
+    // carousel, like the website's `carouselResults` — unless the shopper has
+    // meanwhile picked a fresh photo, which starts a new session.
+    if (active != null &&
+        _session.selectedFile == null &&
+        _session.activeHistoryId == active.id) {
+      final results = await _resultsStore.resultsFor(active.id);
+      if (!mounted) return;
+      if (results.isNotEmpty &&
+          _session.selectedFile == null &&
+          state is! TryonSuccess) {
+        state = TryonSuccess(_session, results: results);
+        return;
+      }
+    }
+
+    if (state is TryonInitial) state = TryonInitial(_session);
+  }
+
+  // ── Photo selection ────────────────────────────────────────────────
+
+  void selectFile(File file) {
+    // Keep "loading" if the drape is still on its way, so "See myself in
+    // this" stays disabled until there is something to try on.
+    final current = state;
+    state = TryonInitial(
+      _session.copyWith(clearSelfie: true).copyWith(selectedFile: file),
+      loadingSource: current is TryonInitial && current.loadingSource,
+    );
+  }
+
+  Future<void> selectFromHistory(SelfieRecord record) async {
+    await _historyStore.promoteToActive(record.id);
+    if (!mounted) return;
+    final history = await _historyStore.getValidHistory();
+    if (!mounted) return;
+    final session = _session.copyWith(
+      history: history,
+      clearSelfie: true,
+    ).copyWith(selectedUrl: record.imageUrl, activeHistoryId: record.id);
+
+    final results = await _resultsStore.resultsFor(record.id);
+    if (!mounted) return;
+    state = results.isNotEmpty
+        ? TryonSuccess(session, results: results)
+        : TryonInitial(session);
+  }
+
+  Future<void> clearSelfie() async {
+    final history = await _historyStore.getValidHistory();
+    if (!mounted) return;
+    state = TryonInitial(
+      _session.copyWith(history: history, clearSelfie: true),
+    );
+  }
+
+  // ── Generation ─────────────────────────────────────────────────────
+
+  /// "See myself in this" and "Regenerate" are the same call.
+  Future<void> generate() async {
+    final session = _session;
+    // A double tap must not start a second pipeline run (and spend a
+    // second credit) while the first is in flight.
+    if (!session.hasSelfie || state is TryonGenerating) return;
+
+    state = TryonGenerating(session, statusMessage: 'Fitting in progress…');
+
+    final result = await _generateTryon(
+      garmentUrl: session.garmentUrl,
+      humanImageUrl: session.selectedUrl ?? '',
+      selfieFile: session.selectedFile,
+      parentGenerationId: session.parentGenerationId,
+      targetFolder: ApiEndpoints.targetTryonResults,
+    );
+
+    switch (result) {
+      case Success<TryonResult>(:final data):
+        final now = DateTime.now();
+        final stamped = data.copyWith(
+          createdAt: data.createdAt ?? now,
+          lastUsedAt: now,
+          category: data.category ?? session.source?.category ?? session.category,
+        );
+
+        // Persist even if the screen has gone: the credit is spent and the
+        // result must be waiting in "My Looks" when the shopper comes back.
+        var selfieId = session.activeHistoryId;
+        var history = session.history;
+        var results = <TryonResult>[stamped];
+        try {
+          // First use of a fresh photo: the upload gave it a hosted URL, which
+          // becomes its history entry so later try-ons reuse it.
+          if (selfieId == null && data.humanImageUrl.isNotEmpty) {
+            final saved = await _historyStore.saveImage(data.humanImageUrl);
+            selfieId = saved.id;
+          } else if (selfieId != null) {
+            // Using a photo extends its 20-minute window, as on the website.
+            await _historyStore.promoteToActive(selfieId);
+          }
+          history = await _historyStore.getValidHistory();
+          if (selfieId != null) {
+            final stored = await _resultsStore.add(selfieId, stamped);
+            if (stored.isNotEmpty) results = stored;
+          }
+        } catch (_) {
+          // Local persistence failed (disk full, corrupt prefs). The result
+          // is still in hand: show it, just without history.
+        }
+        if (!mounted) return;
+
+        // From here on the photo is its hosted copy: drop the local file so
+        // "Regenerate" reuses the upload instead of sending it again.
+        final hosted = data.humanImageUrl.isNotEmpty
+            ? data.humanImageUrl
+            : session.selectedUrl;
+        state = TryonSuccess(
+          session.copyWith(history: history, clearSelfie: true).copyWith(
+            selectedUrl: hosted,
+            activeHistoryId: selfieId,
+          ),
+          results: results,
+        );
+
+      case Fail<TryonResult>(:final failure):
+        if (!mounted) return;
+        state = TryonError(
+          session,
+          message: failure.message,
+          code: _codeFor(failure),
+        );
+    }
+  }
+
+  /// Back to the photo step, keeping the selfie so "Regenerate" works.
+  void backToStart() => state = TryonInitial(_session);
+
+  // ── Carousel ───────────────────────────────────────────────────────
+
+  void showResult(int index) {
+    final current = state;
+    if (current is! TryonSuccess || !current.hasResults) return;
+    state = current.copyWith(
+      index: index.clamp(0, current.results.length - 1),
+      clearPendingBackground: true,
+    );
+  }
+
+  Future<void> deleteResult(TryonResult result) async {
+    final current = state;
+    if (current is! TryonSuccess) return;
+    final selfieId = current.session.activeHistoryId;
+    final remaining = selfieId != null
+        ? await _resultsStore.remove(selfieId, result.generationId)
+        : current.results.where((r) => r != result).toList();
+    if (!mounted) return;
+
+    if (remaining.isEmpty) {
+      state = TryonInitial(current.session);
+      return;
+    }
+    state = current.copyWith(
+      results: remaining,
+      index: current.index.clamp(0, remaining.length - 1),
+    );
+  }
+
+  // ── Retouching ─────────────────────────────────────────────────────
+
+  void selectBackground(String backgroundId) {
+    final current = state;
+    if (current is! TryonSuccess || current.isPostProcessing) return;
+    state = current.copyWith(pendingBackgroundId: backgroundId);
+  }
+
+  void setOutfitTab(OutfitTab tab) {
+    final current = state;
+    if (current is! TryonSuccess || current.isPostProcessing) return;
+    state = current.copyWith(outfitTab: tab);
+  }
+
+  void selectModification(String modificationId) {
+    final current = state;
+    if (current is! TryonSuccess || current.isPostProcessing) return;
+    state = current.outfitTab == OutfitTab.sleeve
+        ? current.copyWith(pendingSleeveId: modificationId)
+        : current.copyWith(pendingNeckId: modificationId);
+  }
+
+  Future<void> applyBackground() async {
+    final current = state;
+    if (current is! TryonSuccess || !current.hasResults) return;
+    final bgId = current.pendingBackgroundId;
+    if (bgId == null || current.isPostProcessing) return;
+
+    state = current.copyWith(
+      isPostProcessing: true,
+      postProcessMessage: 'Applying background…',
+      clearPostMessage: false,
+    );
+
+    final result = await _changeBackground(
+      currentImageUrl: current.current.resultImageUrl,
+      backgroundId: bgId,
+      // The parent drape, as the website sends it.
+      generationId: current.session.parentGenerationId,
+    );
+
+    await _finishPostProcess(current, result, clearBackground: true);
+  }
+
+  Future<void> applyModification() async {
+    final current = state;
+    if (current is! TryonSuccess ||
+        !current.hasResults ||
+        current.isPostProcessing) {
+      return;
+    }
+
+    state = current.copyWith(
+      isPostProcessing: true,
+      postProcessMessage: 'Applying…',
+    );
+
+    final result = await _modifyOutfit(
+      currentImageUrl: current.current.resultImageUrl,
+      modificationType: current.pendingModificationId,
+      generationId: current.session.parentGenerationId,
+    );
+
+    await _finishPostProcess(current, result);
+  }
+
+  Future<void> _finishPostProcess(
+    TryonSuccess before,
+    Result<String> result, {
+    bool clearBackground = false,
+  }) async {
+    switch (result) {
+      case Success<String>(:final data):
+        final edited = before.current.copyWith(
+          resultImageUrl: data,
+          lastUsedAt: DateTime.now(),
+        );
+        // The on-screen list, edited in place. This stays the answer if the
+        // store has meanwhile expired the entry (20-minute window): a visible
+        // carousel is never replaced with an empty one.
+        var results = before.results
+            .map((r) => r == before.current ? edited : r)
+            .toList();
+        final selfieId = before.session.activeHistoryId;
+        if (selfieId != null) {
+          try {
+            final stored = await _resultsStore.replaceImage(
+                selfieId, before.current.generationId, data);
+            if (stored.any((r) => r.generationId == before.current.generationId)) {
+              results = stored;
+            }
+          } catch (_) {
+            // Keep the in-memory edit.
+          }
+        }
+        if (!mounted) return;
+        state = before.copyWith(
+          results: results,
+          isPostProcessing: false,
+          clearPendingBackground: clearBackground,
+          clearPostMessage: true,
+        );
+
+      case Fail<String>(:final failure):
+        if (!mounted) return;
+        state = before.copyWith(
+          isPostProcessing: false,
+          postProcessMessage: failure.message,
+          postProcessCode: _codeFor(failure),
+        );
+    }
+  }
+
+  /// Clears a shown post-process error so it does not re-fire on rebuild.
+  void acknowledgePostProcessError() {
+    final current = state;
+    if (current is! TryonSuccess) return;
+    state = current.copyWith(clearPostMessage: true);
+  }
+
+  // ─── Helpers ──────────────────────────────────────────────────────
+
+  static String? _codeFor(Failure failure) => switch (failure) {
+        GuestLimitReachedFailure() => TryonErrorCode.guestLimit,
+        InsufficientCreditsFailure() => TryonErrorCode.insufficientCredits,
+        AuthTokenExpiredFailure() => TryonErrorCode.authExpired,
+        _ => null,
+      };
+}
+
+// ─── Riverpod Provider ─────────────────────────────────────────────
+
+final tryonNotifierProvider =
+    StateNotifierProvider.autoDispose<TryonNotifier, TryonStudioState>((ref) {
+  return TryonNotifier(
+    repository: ref.read(_repositoryProvider),
+    generateTryon: ref.read(_generateTryonProvider),
+    changeBackground: ref.read(_changeBackgroundProvider),
+    modifyOutfit: ref.read(_modifyOutfitProvider),
+    historyStore: ref.read(_historyDataSourceProvider),
+    resultsStore: ref.read(_resultsDataSourceProvider),
+  );
+});
