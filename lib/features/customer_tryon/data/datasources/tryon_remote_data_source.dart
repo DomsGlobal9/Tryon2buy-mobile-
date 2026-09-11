@@ -57,10 +57,15 @@ class TryonRemoteDataSource {
     String? frontViewUrl,
     String? targetFolder,
   }) async {
+    // The server records this against the row before it calls the model, so
+    // a result whose response is lost can still be claimed afterwards.
+    final clientRequestId = ApiClient.newRequestId();
+
     final body = <String, dynamic>{
       'mode': mode,
       'garment_image_url': garmentUrl,
       'human_image_url': humanImageUrl,
+      'client_request_id': clientRequestId,
       if (category != null) 'category': category,
       if (parentGenerationId != null) 'parent_generation_id': parentGenerationId,
       if (targetFolder != null) 'target_folder': targetFolder,
@@ -71,12 +76,33 @@ class TryonRemoteDataSource {
       if (frontViewUrl != null) 'front_view_url': frontViewUrl,
     };
 
-    final response = await _post(
-      ApiEndpoints.generateTryon,
-      body,
-      timeout: ApiClient.generationTimeout,
-    );
-    return TryonGenerationDto.fromJson(_decodeMap(response));
+    try {
+      final response = await _post(
+        ApiEndpoints.generateTryon,
+        body,
+        timeout: ApiClient.generationTimeout,
+      );
+      return TryonGenerationDto.fromJson(_decodeMap(response));
+    } on RequestTimeoutException {
+      return await _recoverOrRethrow(clientRequestId, const RequestTimeoutException());
+    } on NetworkException {
+      return await _recoverOrRethrow(clientRequestId, const NetworkException());
+    }
+  }
+
+  /// Last chance to claim a generation whose response never arrived.
+  ///
+  /// The credit was spent the moment the server started work, so a dropped
+  /// connection would otherwise cost the shopper a try-on and leave the
+  /// finished image unreachable. If nothing can be claimed, the original
+  /// transport failure is what the user should see.
+  Future<TryonGenerationDto> _recoverOrRethrow(
+    String clientRequestId,
+    Exception original,
+  ) async {
+    final recovered = await ApiClient.recoverGeneration(clientRequestId);
+    if (recovered != null) return TryonGenerationDto.fromJson(recovered);
+    throw original;
   }
 
   /// Swap background. Returns the new result image URL.

@@ -40,14 +40,20 @@ class VendorRepository {
     String? category,
     String? garmentId,
     String? dupattaStyleUrl,
-  }) {
-    return ApiClient.post<Map<String, dynamic>>(
+  }) async {
+    // Recorded against the row before the model runs, so a drape whose
+    // response is lost can still be claimed. A merchant's drape credit is
+    // spent either way, and an unclaimed one is an orphan nobody can reach.
+    final clientRequestId = ApiClient.newRequestId();
+
+    final response = await ApiClient.post<Map<String, dynamic>>(
       ApiEndpoints.generateTryon,
       body: {
         'mode': 'with_garment',
         'garment_image_url': garmentImageUrl,
         'human_image_url': modelImageUrl,
         'target_folder': ApiEndpoints.targetVendorDrapes,
+        'client_request_id': clientRequestId,
         if (category != null) 'category': category,
         if (garmentId != null) 'garment_id': garmentId,
         // Sent even when null: the website always includes the key.
@@ -59,6 +65,14 @@ class VendorRepository {
       // The credit is debited before the pipeline runs; never give up early.
       timeout: ApiClient.generationTimeout,
     );
+
+    // A credit gate or a rejected token is a real answer; only a lost
+    // connection is worth chasing.
+    if (response.success || response.statusCode != null) return response;
+
+    final recovered = await ApiClient.recoverGeneration(clientRequestId);
+    if (recovered != null) return ApiResponse.success(recovered);
+    return response;
   }
 
   /// Attaches a finished generation to this vendor's library.

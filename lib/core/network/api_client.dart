@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
+import '../constants/api_endpoints.dart';
 import '../session/auth_session.dart';
 import '../storage/local_storage_service.dart';
 import '../utils/jwt_utils.dart';
@@ -86,6 +88,56 @@ class ApiClient {
     final token = storage.getVendorToken();
     if (token == null || token.isEmpty) return;
     await AuthSession.instance.invalidate(AuthRole.vendor);
+  }
+
+  /// A key for one generation attempt, sent as `client_request_id`.
+  ///
+  /// Opaque to the server, which only needs it to be unique and unguessable;
+  /// it is the handle used to recover a result whose response was lost.
+  static String newRequestId() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
+    final hex = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    return '${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}-$hex';
+  }
+
+  /// Asks the server what became of the generation sent under [clientRequestId].
+  ///
+  /// Returns the completed payload, or null when the work failed, was never
+  /// started, or is still running after the window below. The credit is
+  /// already spent by the time a response goes missing, so it is worth
+  /// waiting a while rather than making the user pay twice.
+  static Future<Map<String, dynamic>?> recoverGeneration(
+    String clientRequestId, {
+    int attempts = 6,
+  }) async {
+    for (var attempt = 0; attempt < attempts; attempt++) {
+      await Future<void>.delayed(
+        Duration(seconds: attempt == 0 ? 2 : 10),
+      );
+
+      final res = await get<Map<String, dynamic>>(
+        ApiEndpoints.generationStatus(clientRequestId),
+        role: AuthRole.none,
+      );
+
+      // A 404 means the request never reached the server, so there is
+      // nothing to wait for and nothing was charged.
+      if (res.statusCode == 404) return null;
+
+      final data = res.data;
+      if (!res.success || data == null) continue;
+
+      switch (data['status']) {
+        case 'COMPLETED':
+          return data;
+        case 'FAILED':
+          return null;
+        default:
+          continue; // still running
+      }
+    }
+    return null;
   }
 
   /// Turns transport and parsing exceptions into something a user can read.

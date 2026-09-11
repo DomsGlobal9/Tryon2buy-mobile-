@@ -90,6 +90,15 @@ class ApiEndpoints {
   static String singleGeneration(String id) =>
       '$baseUrl/api/tryon/generations/$id';
 
+  /// What happened to the generation asked for under this key.
+  ///
+  /// Generation is synchronous and slow, so the connection carrying the
+  /// result is the least reliable part of the flow, and the credit is spent
+  /// before the result is sent. Polling this with the `client_request_id`
+  /// that was sent hands the finished work over instead of losing it.
+  static String generationStatus(String clientRequestId) =>
+      '$baseUrl/api/tryon/generation-status/$clientRequestId';
+
   /// Vendor-scoped delete.
   static String deleteVendorGeneration(String id) =>
       '$baseUrl/api/tryon/vendor/generations/$id';
