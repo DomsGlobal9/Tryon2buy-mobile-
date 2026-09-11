@@ -150,22 +150,30 @@ class _SplashScreenState extends State<SplashScreen>
         await LocalStorageService.getInstance()
             .timeout(_storageTimeout)
             .catchError((Object _) => LocalStorageService());
+    if (!mounted) return;
 
-    // A token past its `exp` is dropped here, so the launch decision and
-    // every later request agree that the merchant is signed out.
+    // ── Nothing below this line may await ────────────────────────────────
+    // `_completed` is already set, so the watchdog is cancelled and the
+    // resume retry returns early. One await that never resolves — a wedged
+    // preferences channel on a cold start — would leave the user on a
+    // spinner with nothing left to rescue them. Every read here is a
+    // synchronous cache hit; the two writes are fire-and-forget.
+
     final rawToken = storage.getVendorToken();
     final vendorSignedIn = storage.isVendorSignedIn;
-    if (!vendorSignedIn && rawToken != null && rawToken.isNotEmpty) {
-      await storage.logoutVendor();
-      await storage.setPortalType('merchant');
-    }
-    // Warm the app-wide session before the first screen builds, so a merchant
-    // landing straight in a workspace sees their own account rather than a
-    // guest layout until something else happens to call refresh().
-    await AuthSession.instance.refresh();
-
     final isB2b = storage.isB2bPortal;
     final isGuest = storage.isGuestMode();
+
+    // Hand the session the handle we already hold, so the first screen sees
+    // the real account without waiting on storage a second time.
+    AuthSession.instance.adopt(storage);
+
+    // A token past its `exp` is cleared from disk in the background. The
+    // routing decision above already treats it as signed out, so the app
+    // never acts on it even if the write lands late.
+    if (!vendorSignedIn && rawToken != null && rawToken.isNotEmpty) {
+      unawaited(AuthSession.instance.signOutVendor());
+    }
 
     final String targetRoute;
     if (vendorSignedIn) {

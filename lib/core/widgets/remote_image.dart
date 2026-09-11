@@ -43,18 +43,31 @@ class RemoteImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Widget content = (url == null || url!.trim().isEmpty)
-        ? _fallback()
-        : CachedNetworkImage(
-            imageUrl: url!,
-            width: width,
-            height: height,
-            fit: fit,
-            memCacheWidth: decodeWidth,
-            fadeInDuration: const Duration(milliseconds: 220),
-            placeholder: (context, url) => _placeholder(),
-            errorWidget: (context, url, error) => _fallback(),
-          );
+    final String trimmed = url?.trim() ?? '';
+    final Widget content;
+    if (trimmed.isEmpty) {
+      content = _fallback();
+    } else if (trimmed.startsWith('assets/')) {
+      content = Image.asset(
+        trimmed,
+        width: width,
+        height: height,
+        fit: fit,
+        cacheWidth: decodeWidth,
+        errorBuilder: (context, error, stackTrace) => _fallback(),
+      );
+    } else {
+      content = CachedNetworkImage(
+        imageUrl: trimmed,
+        width: width,
+        height: height,
+        fit: fit,
+        memCacheWidth: decodeWidth,
+        fadeInDuration: const Duration(milliseconds: 220),
+        placeholder: (context, url) => _placeholder(),
+        errorWidget: (context, url, error) => _fallback(),
+      );
+    }
 
     final Widget clipped = borderRadius != null
         ? ClipRRect(borderRadius: borderRadius!, child: content)

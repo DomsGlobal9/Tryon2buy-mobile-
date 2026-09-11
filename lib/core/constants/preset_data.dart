@@ -1,3 +1,5 @@
+import 'app_assets.dart';
+
 class PresetBackground {
   final String id;
   final String name;
@@ -74,17 +76,17 @@ class PresetData {
     PresetModification(
       id: 'elbow-sleeve',
       name: 'Elbow Sleeve',
-      imageUrl: 'https://images.unsplash.com/photo-1621184455862-c163dfb30e0f?auto=format&fit=crop&w=200&q=80',
+      imageUrl: AppAssets.sleeveElbow,
     ),
     PresetModification(
       id: 'full-sleeve',
       name: 'Full Sleeve',
-      imageUrl: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=200&q=80',
+      imageUrl: AppAssets.sleeveFull,
     ),
     PresetModification(
       id: 'sleeveless',
       name: 'Sleeveless',
-      imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=200&q=80',
+      imageUrl: AppAssets.sleeveLess,
     ),
   ];
 
@@ -93,17 +95,17 @@ class PresetData {
     PresetModification(
       id: 'boat-neck',
       name: 'Boat Neck',
-      imageUrl: 'https://images.unsplash.com/photo-1621184455862-c163dfb30e0f?auto=format&fit=crop&w=200&q=80',
+      imageUrl: AppAssets.neckBoat,
     ),
     PresetModification(
       id: 'round-neck',
       name: 'Round Neck',
-      imageUrl: 'https://images.unsplash.com/photo-1608748010899-18f300247112?auto=format&fit=crop&w=200&q=80',
+      imageUrl: AppAssets.neckRound,
     ),
     PresetModification(
       id: 'collar-neck',
       name: 'Collar Neck',
-      imageUrl: 'https://images.unsplash.com/photo-1583391733958-d25e07fac200?auto=format&fit=crop&w=200&q=80',
+      imageUrl: AppAssets.neckCollar,
     ),
   ];
 }

@@ -30,6 +30,17 @@ class AuthSession extends ChangeNotifier {
   LocalStorageService? get _readable =>
       _storage ??= LocalStorageService.readyInstance;
 
+  /// Takes a storage handle the caller has already resolved, and notifies.
+  ///
+  /// Synchronous on purpose. The splash calls this once it has committed to
+  /// leaving: at that point its watchdog and its resume retry are both
+  /// disarmed, so an `await` that never returns would strand the user on the
+  /// splash forever. Nothing on that path may wait on the platform channel.
+  void adopt(LocalStorageService storage) {
+    _storage = storage;
+    notifyListeners();
+  }
+
   /// Drops the cached storage handle. Pair with
   /// [LocalStorageService.resetForTests].
   @visibleForTesting

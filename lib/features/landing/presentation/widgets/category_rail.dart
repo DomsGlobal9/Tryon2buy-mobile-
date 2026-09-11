@@ -21,11 +21,11 @@ class CategoryRail extends StatelessWidget {
   const CategoryRail({super.key, required this.onCategoryTap});
 
   static const _categories = <_Category>[
-    _Category('SAREE', AppAssets.sareeSample),
-    _Category('LEHANGA', AppAssets.lehengaSample),
-    _Category('ANARKALI', AppAssets.lehengaSample),
-    _Category('KURTHI', AppAssets.kurtiSample),
-    _Category('SHARARA', AppAssets.placeholderModel),
+    _Category('SAREE', AppAssets.categorySaree),
+    _Category('LEHANGA', AppAssets.categoryLehenga),
+    _Category('ANARKALI', AppAssets.categoryAnarkali),
+    _Category('KURTHI', AppAssets.categoryKurti),
+    _Category('SHARARA', AppAssets.categorySharara),
   ];
 
   @override

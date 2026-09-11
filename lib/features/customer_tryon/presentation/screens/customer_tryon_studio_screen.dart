@@ -838,15 +838,19 @@ class _OptionTile extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Retoucher tiles ship as bundled assets (the website's
-              // sleeve/neck illustrations); backgrounds stay remote.
               if (imageUrl.startsWith('assets/'))
-                Image.asset(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const ColoredBox(
-                    color: AppColors.backgroundLight,
-                    child: Icon(Icons.image_outlined, color: AppColors.textMuted),
+                ColoredBox(
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 18, top: 4, left: 4, right: 4),
+                    child: Image.asset(
+                      imageUrl,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => const ColoredBox(
+                        color: AppColors.backgroundLight,
+                        child: Icon(Icons.image_outlined, color: AppColors.textMuted),
+                      ),
+                    ),
                   ),
                 )
               else

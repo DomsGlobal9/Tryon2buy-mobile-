@@ -18,17 +18,39 @@ class ShopRepository {
   static const Duration _cacheTtl = Duration(seconds: 90);
   static final Map<String, _CachedCollection> _cache = {};
 
+  /// Requests already on the wire, by vendor id.
+  ///
+  /// The Discover tab and the home rail mount together inside the shell's
+  /// IndexedStack, so both ask for the demo collection in the same frame,
+  /// before either can populate the cache. Without this they fired the same
+  /// request twice, which on a cold backend means two waits of a minute
+  /// instead of one shared one.
+  static final Map<String, Future<ApiResponse<List<ShopItem>>>> _inFlight = {};
+
   /// Drop everything cached, e.g. after a merchant saves a new drape.
   static void invalidateCache() => _cache.clear();
 
   Future<ApiResponse<List<ShopItem>>> fetchCollection(
     String vendorId, {
     bool forceRefresh = false,
-  }) async {
+  }) {
     final cached = _cache[vendorId];
     if (!forceRefresh && cached != null && !cached.isStale) {
-      return ApiResponse.success(cached.items);
+      return Future.value(ApiResponse.success(cached.items));
     }
+
+    final pending = _inFlight[vendorId];
+    if (pending != null) return pending;
+
+    final request = _fetch(vendorId).whenComplete(() {
+      _inFlight.remove(vendorId);
+    });
+    _inFlight[vendorId] = request;
+    return request;
+  }
+
+  Future<ApiResponse<List<ShopItem>>> _fetch(String vendorId) async {
+    final cached = _cache[vendorId];
 
     final response = await ApiClient.get<Map<String, dynamic>>(
       ApiEndpoints.vendorGallery(vendorId),

@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/animations/pressable.dart';
-import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/remote_image.dart';
 
 /// Swipeable promo cards with a dot indicator, the mobile stand-in for the
 /// website's split hero. Each slide is one full-bleed image with a short
@@ -46,7 +44,7 @@ class _HomeHeroCarouselState extends State<HomeHeroCarousel> {
       onTap: widget.onTryOn,
     ),
     _HeroSlide(
-      url: AppAssets.lehengaSample,
+      asset: 'assets/images/tryon_models.png',
       eyebrow: 'FOR BOUTIQUES',
       title: 'Digitize your\ncatalog in minutes',
       cta: 'Merchant Portal',
@@ -105,16 +103,14 @@ class _HomeHeroCarouselState extends State<HomeHeroCarousel> {
 }
 
 class _HeroSlide {
-  final String? asset;
-  final String? url;
+  final String asset;
   final String eyebrow;
   final String title;
   final String cta;
   final VoidCallback onTap;
 
   const _HeroSlide({
-    this.asset,
-    this.url,
+    required this.asset,
     required this.eyebrow,
     required this.title,
     required this.cta,
@@ -129,9 +125,16 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Widget image = slide.asset != null
-        ? Image.asset(slide.asset!, fit: BoxFit.cover)
-        : RemoteImage(url: slide.url, fit: BoxFit.cover);
+    // `cacheWidth` caps the decoded bitmap. These are catalogue-sized PNGs
+    // shown in a card a few hundred points wide, and the carousel builds all
+    // of them during the first home frame; decoding at full size is the
+    // difference between a smooth launch and a visible stall.
+    final Widget image = Image.asset(
+      slide.asset,
+      fit: BoxFit.cover,
+      cacheWidth: 1000,
+      filterQuality: FilterQuality.medium,
+    );
 
     return Pressable(
       onTap: slide.onTap,

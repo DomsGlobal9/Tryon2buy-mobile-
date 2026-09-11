@@ -12,6 +12,22 @@ class AppAssets {
   /// Square "T2B" app mark, white type.
   static const String logoMarkWhite = 'assets/icons/logo_mark_white.png';
 
+  // ── Garment Category Avatars ──────────────────────────────────────────────
+  static const String categorySaree = 'assets/images/category_saree.jpg';
+  static const String categoryLehenga = 'assets/images/category_lehenga.jpg';
+  static const String categoryAnarkali = 'assets/images/category_anarkali.jpg';
+  static const String categoryKurti = 'assets/images/category_kurti.jpg';
+  static const String categorySharara = 'assets/images/category_sharara.jpg';
+
+  // ── Blouse Retoucher Styles (Web Frontend Line Art) ───────────────────────
+  static const String sleeveElbow = 'assets/images/elbow_sleeve.png';
+  static const String sleeveFull = 'assets/images/full_sleeve.png';
+  static const String sleeveLess = 'assets/images/sleeve_less.png';
+
+  static const String neckBoat = 'assets/images/boat_neck.png';
+  static const String neckRound = 'assets/images/round_neck.png';
+  static const String neckCollar = 'assets/images/collar_neck.png';
+
   // ── Remote showcase fallbacks ─────────────────────────────────────────────
   static const String placeholderModel =
       'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=768&h=1024&q=80';
