@@ -100,7 +100,9 @@ class _CustomerTryonStudioScreenState
   /// Opens the business portal and re-reads the session on the way back, so
   /// the studio and every other screen agree on who is signed in.
   Future<void> _openSignIn() async {
-    await Navigator.pushNamed(context, AppRouter.vendorLogin);
+    // `returnToCaller`: come back to this fitting, photo and drape intact,
+    // rather than being carried off into the merchant studio.
+    await AppRouter.openSignIn(context, returnToCaller: true);
     await AuthSession.instance.refresh();
   }
 

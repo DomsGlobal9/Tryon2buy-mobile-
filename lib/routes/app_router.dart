@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import '../core/animations/app_page_route.dart';
+import '../features/auth/presentation/screens/signed_out_screen.dart';
 import '../features/auth/presentation/screens/vendor_login_screen.dart';
 import '../features/auth/presentation/screens/welcome_screen.dart';
 import '../features/b2b/presentation/screens/b2b_catalog_screen.dart';
 import '../features/b2b/presentation/screens/b2b_digitize_screen.dart';
 import '../features/catalog/presentation/screens/catalog_browser_screen.dart';
 import '../features/content/presentation/screens/about_screen.dart';
+import '../features/content/data/legal_content.dart';
 import '../features/content/presentation/screens/journal_screen.dart';
+import '../features/content/presentation/screens/legal_screen.dart';
 import '../features/content/presentation/screens/solution_screen.dart';
 import '../features/customer_tryon/presentation/screens/customer_tryon_studio_screen.dart';
 import '../features/customer_tryon/presentation/screens/vendor_public_shop_screen.dart';
@@ -27,6 +30,7 @@ class AppRouter {
   static const String landing = '/landing';
   static const String vendorLogin = '/vendor-login';
   static const String vendorSignup = '/vendor-signup';
+  static const String signedOut = '/signed-out';
   static const String vendorWorkspace = '/vendor-workspace';
   static const String vendorGallery = '/vendor-gallery';
   static const String customerStudio = '/customer-studio';
@@ -42,6 +46,10 @@ class AppRouter {
   static const String solution = '/solution';
   static const String journal = '/journal';
   static const String journalPost = '/journal-post';
+
+  // ── Legal (in-app; the website's footer links for these are empty) ────
+  static const String privacy = '/privacy';
+  static const String terms = '/terms';
 
   // ── B2B Client Portal ──────────────────────────────────────────────────
   static const String b2bLogin = '/b2b-login';
@@ -83,6 +91,29 @@ class AppRouter {
     );
   }
 
+  /// Opens the business sign-in portal.
+  ///
+  /// By default a successful sign-in carries the user into their workspace
+  /// (home shell underneath, studio on top) and this future completes with
+  /// null once the portal is gone. With [returnToCaller] the portal instead
+  /// pops with `true`, for flows that must resume where they were.
+  static Future<Object?> openSignIn(
+    BuildContext context, {
+    bool b2b = false,
+    bool register = false,
+    bool returnToCaller = false,
+  }) {
+    return Navigator.pushNamed(
+      context,
+      vendorLogin,
+      arguments: SignInArgs(
+        b2b: b2b,
+        register: register,
+        returnToCaller: returnToCaller,
+      ),
+    );
+  }
+
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case splash:
@@ -104,9 +135,18 @@ class AppRouter {
         return AppPageRoute<dynamic>(builder: (_) => const LandingScreen());
 
       case vendorLogin:
-        final initialType = settings.arguments as String? ?? 'normal';
+        // Typed arguments from [openSignIn]; a bare 'b2b' string is the
+        // older calling convention and still works.
+        final args = settings.arguments;
+        final signIn = args is SignInArgs
+            ? args
+            : SignInArgs(b2b: args == 'b2b');
         return AppPageRoute<dynamic>(
-          builder: (_) => VendorLoginScreen(initialType: initialType),
+          builder: (_) => VendorLoginScreen(
+            initialType: signIn.b2b ? 'b2b' : 'normal',
+            initialRegistering: signIn.register,
+            returnToCaller: signIn.returnToCaller,
+          ),
         );
 
       // "Create account" from the welcome screen: same portal, second tab.
@@ -117,6 +157,10 @@ class AppRouter {
             initialRegistering: true,
           ),
         );
+
+      // The beat between signing out and the welcome screen.
+      case signedOut:
+        return AppPageRoute<dynamic>(builder: (_) => const SignedOutScreen());
 
       case vendorWorkspace:
         return AppPageRoute<dynamic>(builder: (_) => const VendorWorkspaceScreen());
@@ -180,6 +224,16 @@ class AppRouter {
       case journalPost:
         final slug = settings.arguments as String? ?? '';
         return AppPageRoute<dynamic>(builder: (_) => JournalPostScreen(slug: slug));
+
+      case privacy:
+        return AppPageRoute<dynamic>(
+          builder: (_) => const LegalScreen(document: LegalDocument.privacy),
+        );
+
+      case terms:
+        return AppPageRoute<dynamic>(
+          builder: (_) => const LegalScreen(document: LegalDocument.terms),
+        );
 
       case b2bDigitize:
         return AppPageRoute<dynamic>(builder: (_) => const B2bDigitizeScreen());

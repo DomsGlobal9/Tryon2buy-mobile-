@@ -118,8 +118,7 @@ class _LandingScreenState extends State<LandingScreen> {
                 delegate: SliverChildListDelegate([
                   HomeHeader(
                     onAccountTap: _openProfile,
-                    onSignInTap: () =>
-                        Navigator.pushNamed(context, AppRouter.vendorLogin),
+                    onSignInTap: () => AppRouter.openSignIn(context),
                   ),
                   HomeSearchBar(onTap: _openSearch),
                   const SizedBox(height: 14),

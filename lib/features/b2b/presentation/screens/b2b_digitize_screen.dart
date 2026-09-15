@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import '../../../../core/session/auth_session.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/ui_helpers.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/empty_state_view.dart';
 import '../../../../core/widgets/remote_image.dart';
 import '../../../../routes/app_router.dart';
+import '../../../auth/presentation/sign_out.dart';
 import '../../../vendor/data/studio_catalog.dart';
 import '../../../vendor/presentation/screens/vendor_workspace_screen.dart' show SlotUpload;
 import '../../../vendor/presentation/widgets/garment_slot_card.dart';
@@ -71,10 +71,16 @@ class _B2bDigitizeScreenState extends State<B2bDigitizeScreen> {
     super.dispose();
   }
 
+  /// True once the user chose Logout here, so the session listener does not
+  /// race it to the navigator: sign-out notifies before `_logout` resumes,
+  /// and two `pushNamedAndRemoveUntil` calls in one frame left a login
+  /// screen flashing under the home screen.
+  bool _leaving = false;
+
   /// The token was dropped by `ApiClient` (expired, or rejected with 401).
   /// Nothing on this screen works without it, so go back to the portal.
   void _onSession() {
-    if (!mounted || AuthSession.instance.isVendorSignedIn) return;
+    if (!mounted || _leaving || AuthSession.instance.isVendorSignedIn) return;
     Navigator.pushNamedAndRemoveUntil(context, AppRouter.b2bLogin, (_) => false);
   }
 
@@ -210,19 +216,13 @@ class _B2bDigitizeScreenState extends State<B2bDigitizeScreen> {
     });
   }
 
-  Future<void> _logout() async {
-    final ok = await UiHelpers.confirm(
-      context,
-      title: 'Logout?',
-      message: 'You will return to the home screen.',
-      confirmLabel: 'Logout',
-      destructive: true,
-    );
-    if (!ok || !mounted) return;
-    await AuthSession.instance.signOutVendor();
-    if (!mounted) return;
-    Navigator.pushNamedAndRemoveUntil(context, AppRouter.home, (_) => false);
-  }
+  Future<void> _logout() => signOutAndLeave(
+        context,
+        title: 'Logout?',
+        message: 'You will return to the welcome screen. Sign back in any time.',
+        confirmLabel: 'Logout',
+        beforeSignOut: () => _leaving = true,
+      );
 
   // ── Build ──────────────────────────────────────────────────────────
 

@@ -35,8 +35,11 @@ class ImageHistoryDock extends StatelessWidget {
           ),
         ],
       ),
+      // The dock fills the width it is given and lets the thumbnail strip
+      // scroll inside what is left. A shrink-wrapped strip in a min-width
+      // row grew with every photo (ten thumbnails is ~500 px) and overflowed
+      // the screen once the history held six or more.
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
           // Add Photo button
           InkWell(
@@ -57,57 +60,58 @@ class ImageHistoryDock extends StatelessWidget {
           Container(width: 1, height: 28, color: AppColors.border),
           const SizedBox(width: 8),
           // History thumbnails
-          SizedBox(
-            height: 40,
-            child: ListView.separated(
-              shrinkWrap: true,
-              scrollDirection: Axis.horizontal,
-              itemCount: history.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final item = history[index];
-                final isSelected = item.id == activeImageId;
+          Expanded(
+            child: SizedBox(
+              height: 40,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: history.length,
+                separatorBuilder: (context, index) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final item = history[index];
+                  final isSelected = item.id == activeImageId;
 
-                return GestureDetector(
-                  onTap: () => onSelectImage(item),
-                  child: Stack(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: isSelected ? AppColors.accentGold : AppColors.border,
-                            width: isSelected ? 2.5 : 1,
+                  return GestureDetector(
+                    onTap: () => onSelectImage(item),
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isSelected ? AppColors.accentGold : AppColors.border,
+                              width: isSelected ? 2.5 : 1,
+                            ),
                           ),
-                        ),
-                        child: ClipOval(
-                          child: CachedNetworkImage(
-                            imageUrl: item.imageUrl,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => Container(color: AppColors.borderLight),
-                            errorWidget: (context, url, error) => const Icon(Icons.person, size: 20),
-                          ),
-                        ),
-                      ),
-                      if (isSelected)
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: Container(
-                            width: 12,
-                            height: 12,
-                            decoration: const BoxDecoration(
-                              color: AppColors.accentGold,
-                              shape: BoxShape.circle,
+                          child: ClipOval(
+                            child: CachedNetworkImage(
+                              imageUrl: item.imageUrl,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Container(color: AppColors.borderLight),
+                              errorWidget: (context, url, error) => const Icon(Icons.person, size: 20),
                             ),
                           ),
                         ),
-                    ],
-                  ),
-                );
-              },
+                        if (isSelected)
+                          Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              width: 12,
+                              height: 12,
+                              decoration: const BoxDecoration(
+                                color: AppColors.accentGold,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ],

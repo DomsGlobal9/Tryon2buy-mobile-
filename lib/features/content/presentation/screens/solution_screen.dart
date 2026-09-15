@@ -62,7 +62,7 @@ class SolutionScreen extends StatelessWidget {
                   SizedBox(
                     height: 54,
                     child: ElevatedButton.icon(
-                      onPressed: () => Navigator.pushNamed(context, AppRouter.vendorLogin),
+                      onPressed: () => AppRouter.openSignIn(context),
                       icon: const Icon(Icons.arrow_forward_rounded, size: 16),
                       label: Text('START GENERATING', style: AppTypography.cta(size: 12)),
                       style: ElevatedButton.styleFrom(

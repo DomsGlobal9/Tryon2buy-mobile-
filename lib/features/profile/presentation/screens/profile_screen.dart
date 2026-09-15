@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/ui_helpers.dart';
 import '../../../../routes/app_router.dart';
+import '../../../auth/presentation/sign_out.dart';
 import '../../../shell/presentation/screens/main_shell_screen.dart';
 import '../../../vendor/presentation/merchant_portal.dart';
 
@@ -39,20 +40,9 @@ class ProfileScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _signOutVendor(BuildContext context) async {
-    final ok = await UiHelpers.confirm(
-      context,
-      title: 'Sign out?',
-      message: 'You can sign back in with your email and password at any time.',
-      confirmLabel: 'Sign out',
-      destructive: true,
-    );
-    if (!ok) return;
-    await AuthSession.instance.signOutVendor();
-    if (context.mounted) {
-      UiHelpers.showSnackBar(context, 'Signed out.');
-    }
-  }
+  /// Confirms, clears the session, and leaves through the signed-out screen
+  /// to the welcome page, like every other sign-out in the app.
+  Future<void> _signOutVendor(BuildContext context) => signOutAndLeave(context);
 
   Future<void> _open(BuildContext context, Uri uri) async {
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -78,8 +68,7 @@ class ProfileScreen extends StatelessWidget {
             children: [
               _AccountCard(
                 session: session,
-                onSignIn: () =>
-                    Navigator.pushNamed(context, AppRouter.vendorLogin),
+                onSignIn: () => AppRouter.openSignIn(context),
                 onSignOut: () => _signOutVendor(context),
               ),
               const SizedBox(height: 24),
@@ -125,8 +114,7 @@ class ProfileScreen extends StatelessWidget {
                     icon: Icons.business_center_outlined,
                     title: 'B2B client portal',
                     subtitle: 'Invite-only partner access',
-                    onTap: () =>
-                        Navigator.pushNamed(context, AppRouter.b2bLogin),
+                    onTap: () => AppRouter.openSignIn(context, b2b: true),
                   ),
                 if (session.isVendorSignedIn)
                   _Tile(
@@ -179,21 +167,18 @@ class ProfileScreen extends StatelessWidget {
                   onTap: () =>
                       _open(context, Uri.parse(ApiEndpoints.webAppUrl)),
                 ),
+                // Shown in-app: the website has no privacy or terms pages
+                // (its footer links are empty anchors), so a web link here
+                // dropped the user on the marketing home page.
                 _Tile(
                   icon: Icons.privacy_tip_outlined,
                   title: 'Privacy policy',
-                  onTap: () => _open(
-                    context,
-                    Uri.parse('${ApiEndpoints.webAppUrl}/privacy'),
-                  ),
+                  onTap: () => Navigator.pushNamed(context, AppRouter.privacy),
                 ),
                 _Tile(
                   icon: Icons.description_outlined,
                   title: 'Terms of service',
-                  onTap: () => _open(
-                    context,
-                    Uri.parse('${ApiEndpoints.webAppUrl}/terms'),
-                  ),
+                  onTap: () => Navigator.pushNamed(context, AppRouter.terms),
                 ),
               ]),
               const SizedBox(height: 28),

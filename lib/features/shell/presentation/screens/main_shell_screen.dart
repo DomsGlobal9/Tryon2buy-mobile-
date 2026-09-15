@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/animations/app_motion.dart';
 import '../../../../core/session/auth_session.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -69,7 +70,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
     return MainShellScope(
       goToTab: _onTabSelected,
       child: Scaffold(
-        body: IndexedStack(
+        body: _AnimatedTabs(
           index: _index,
           children: [
             // `IndexedStack` keeps every tab mounted, so offscreen tabs would
@@ -85,6 +86,63 @@ class _MainShellScreenState extends State<MainShellScreen> {
         bottomNavigationBar: _BottomNav(
           index: _index,
           onSelected: _onTabSelected,
+        ),
+      ),
+    );
+  }
+}
+
+/// An [IndexedStack] whose newly selected tab fades and rises into place.
+///
+/// A bare IndexedStack swaps tabs between one frame and the next, which is
+/// the one place the app still felt like a web page. The state-preserving
+/// stack stays; only the reveal is animated, and the whole thing is skipped
+/// under "reduce motion".
+class _AnimatedTabs extends StatefulWidget {
+  final int index;
+  final List<Widget> children;
+
+  const _AnimatedTabs({required this.index, required this.children});
+
+  @override
+  State<_AnimatedTabs> createState() => _AnimatedTabsState();
+}
+
+class _AnimatedTabsState extends State<_AnimatedTabs>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 260),
+    value: 1,
+  );
+  late final Animation<double> _t =
+      CurvedAnimation(parent: _controller, curve: AppMotion.enter);
+
+  @override
+  void didUpdateWidget(covariant _AnimatedTabs oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.index != widget.index) _controller.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final stack = IndexedStack(index: widget.index, children: widget.children);
+    if (AppMotion.reduced(context)) return stack;
+
+    return AnimatedBuilder(
+      animation: _t,
+      child: stack,
+      builder: (context, child) => Opacity(
+        opacity: _t.value,
+        child: Transform.translate(
+          offset: Offset(0, (1 - _t.value) * 10),
+          child: child,
         ),
       ),
     );

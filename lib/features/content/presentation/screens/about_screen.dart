@@ -53,7 +53,7 @@ class AboutScreen extends StatelessWidget {
                   const SizedBox(height: 24),
                   ContentCta(
                     label: 'Become a Merchant',
-                    onTap: () => Navigator.pushNamed(context, AppRouter.vendorLogin),
+                    onTap: () => AppRouter.openSignIn(context, register: true),
                   ),
                   const SizedBox(height: 10),
                   ContentCta(
@@ -205,7 +205,7 @@ class AboutScreen extends StatelessWidget {
                 const SizedBox(height: 24),
                 ContentCta(
                   label: 'Become a Merchant',
-                  onTap: () => Navigator.pushNamed(context, AppRouter.vendorLogin),
+                  onTap: () => AppRouter.openSignIn(context, register: true),
                 ),
               ],
             ),

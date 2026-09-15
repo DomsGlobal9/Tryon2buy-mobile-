@@ -11,6 +11,7 @@ import '../../../../core/utils/ui_helpers.dart';
 import '../../../../core/widgets/credit_dialogs.dart';
 import '../../../../core/widgets/remote_image.dart';
 import '../../../../routes/app_router.dart';
+import '../../../auth/presentation/sign_out.dart';
 import '../../../shop/data/shop_repository.dart';
 import '../../data/studio_catalog.dart';
 import '../../data/vendor_repository.dart';
@@ -247,7 +248,9 @@ class _VendorWorkspaceScreenState extends State<VendorWorkspaceScreen> {
     final storage = await LocalStorageService.getInstance();
     await storage.setGuestMode(false);
     if (!mounted) return false;
-    final ok = await Navigator.pushNamed(context, AppRouter.vendorLogin);
+    // `returnToCaller`: the portal pops back here instead of opening a
+    // fresh studio, so the uploads and result on screen survive.
+    final ok = await AppRouter.openSignIn(context, returnToCaller: true);
     if (!mounted) return false;
     if (ok != true) {
       // Still a guest: keep the free tier available for the next attempt.
@@ -272,23 +275,20 @@ class _VendorWorkspaceScreenState extends State<VendorWorkspaceScreen> {
 
   Future<void> _logout() async {
     if (_isGuest) {
+      // Leaving guest mode returns to the app's front door, the way the
+      // website's exit goes back to its landing page.
       final storage = await LocalStorageService.getInstance();
       await storage.setGuestMode(false);
       if (!mounted) return;
-      Navigator.pushNamedAndRemoveUntil(context, AppRouter.home, (_) => false);
+      Navigator.pushNamedAndRemoveUntil(context, AppRouter.welcome, (_) => false);
       return;
     }
-    final ok = await UiHelpers.confirm(
+    await signOutAndLeave(
       context,
       title: 'Logout?',
-      message: 'You will return to the merchant login.',
+      message: 'You will return to the welcome screen. Sign back in any time.',
       confirmLabel: 'Logout',
-      destructive: true,
     );
-    if (!ok || !mounted) return;
-    await AuthSession.instance.signOutVendor();
-    if (!mounted) return;
-    Navigator.pushNamedAndRemoveUntil(context, AppRouter.vendorLogin, (_) => false);
   }
 
   // ── Build ──────────────────────────────────────────────────────────
