@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:equatable/equatable.dart';
 
+import '../../domain/entities/dock_garment.dart';
+import '../../domain/entities/dock_photo.dart';
 import '../../domain/entities/selfie_record.dart';
 import '../../domain/entities/tryon_result.dart';
 
@@ -22,6 +24,16 @@ final class StudioSession extends Equatable {
   final String? selectedUrl;
   final String? activeHistoryId;
 
+  /// The unified dock photos (with nested try-on results), populated by
+  /// [DockFacade.getPhotosWithResults]. Works for both vendor and guest.
+  final List<DockPhoto> dockPhotos;
+
+  /// Garments customers have tried on (vendor-only; empty for guests).
+  final List<DockGarment> dockGarments;
+
+  /// Whether the dock is backed by the server (vendor) or local storage.
+  final bool isRemoteDock;
+
   const StudioSession({
     this.source,
     this.fallbackGarmentUrl = '',
@@ -30,6 +42,9 @@ final class StudioSession extends Equatable {
     this.selectedFile,
     this.selectedUrl,
     this.activeHistoryId,
+    this.dockPhotos = const [],
+    this.dockGarments = const [],
+    this.isRemoteDock = false,
   });
 
   /// What the shopper is trying on: the drape if one exists, else the raw
@@ -67,6 +82,9 @@ final class StudioSession extends Equatable {
     File? selectedFile,
     String? selectedUrl,
     String? activeHistoryId,
+    List<DockPhoto>? dockPhotos,
+    List<DockGarment>? dockGarments,
+    bool? isRemoteDock,
     bool clearSelfie = false,
   }) {
     return StudioSession(
@@ -78,6 +96,9 @@ final class StudioSession extends Equatable {
       selectedUrl: clearSelfie ? null : (selectedUrl ?? this.selectedUrl),
       activeHistoryId:
           clearSelfie ? null : (activeHistoryId ?? this.activeHistoryId),
+      dockPhotos: dockPhotos ?? this.dockPhotos,
+      dockGarments: dockGarments ?? this.dockGarments,
+      isRemoteDock: isRemoteDock ?? this.isRemoteDock,
     );
   }
 
@@ -90,6 +111,9 @@ final class StudioSession extends Equatable {
         selectedFile,
         selectedUrl,
         activeHistoryId,
+        dockPhotos,
+        dockGarments,
+        isRemoteDock,
       ];
 }
 

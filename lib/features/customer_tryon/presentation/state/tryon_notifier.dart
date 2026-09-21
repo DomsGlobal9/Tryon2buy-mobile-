@@ -4,10 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tryon2buy/core/constants/api_endpoints.dart';
 import 'package:tryon2buy/core/errors/failures.dart';
 import 'package:tryon2buy/core/utils/result.dart';
+import '../../data/datasources/dock_facade.dart';
+import '../../data/datasources/dock_remote_data_source.dart';
 import '../../data/datasources/history_local_data_source.dart';
 import '../../data/datasources/tryon_remote_data_source.dart';
 import '../../data/datasources/tryon_results_local_data_source.dart';
+import '../../data/repositories/dock_repository_impl.dart';
 import '../../data/repositories/tryon_repository_impl.dart';
+import '../../domain/entities/dock_photo.dart';
 import '../../domain/entities/selfie_record.dart';
 import '../../domain/entities/tryon_result.dart';
 import '../../domain/repositories/i_tryon_repository.dart';
@@ -46,6 +50,21 @@ final _resultsDataSourceProvider = Provider<TryonResultsLocalDataSource>((ref) {
   return TryonResultsLocalDataSource();
 });
 
+final _dockRemoteDataSourceProvider = Provider<DockRemoteDataSource>((ref) {
+  return DockRemoteDataSource();
+});
+
+final _dockFacadeProvider = Provider<DockFacade>((ref) {
+  // The remote repository is always created, but the facade only uses it
+  // when AuthSession.instance.isVendorSignedIn is true at call time.
+  final dockRepo = DockRepositoryImpl(ref.read(_dockRemoteDataSourceProvider));
+  return DockFacade(
+    remoteRepository: dockRepo,
+    localHistory: ref.read(_historyDataSourceProvider),
+    localResults: ref.read(_resultsDataSourceProvider),
+  );
+});
+
 // ─── Main Notifier ─────────────────────────────────────────────────
 
 /// The single source of truth for the fitting room.
@@ -66,22 +85,25 @@ class TryonNotifier extends StateNotifier<TryonStudioState> {
   final GenerateVirtualTryonUseCase _generateTryon;
   final ChangeBackgroundUseCase _changeBackground;
   final ModifyOutfitStyleUseCase _modifyOutfit;
-  final HistoryLocalDataSource _historyStore;
-  final TryonResultsLocalDataSource _resultsStore;
+  final DockFacade _dock;
+
+  /// Convenience accessors for the underlying local stores. The DockFacade
+  /// owns them, but the legacy paths in [generate] / [selectFromHistory]
+  /// still write through these directly when the dock is in local mode.
+  HistoryLocalDataSource get _historyStore => _dock.localHistory;
+  TryonResultsLocalDataSource get _resultsStore => _dock.localResults;
 
   TryonNotifier({
     required ITryonRepository repository,
     required GenerateVirtualTryonUseCase generateTryon,
     required ChangeBackgroundUseCase changeBackground,
     required ModifyOutfitStyleUseCase modifyOutfit,
-    required HistoryLocalDataSource historyStore,
-    required TryonResultsLocalDataSource resultsStore,
+    required DockFacade dock,
   })  : _repository = repository,
         _generateTryon = generateTryon,
         _changeBackground = changeBackground,
         _modifyOutfit = modifyOutfit,
-        _historyStore = historyStore,
-        _resultsStore = resultsStore,
+        _dock = dock,
         super(const TryonInitial(StudioSession()));
 
   StudioSession get _session => state.session;
@@ -100,10 +122,19 @@ class TryonNotifier extends StateNotifier<TryonStudioState> {
         (generationId != null && generationId.isNotEmpty) ? generationId : null;
 
     state = TryonInitial(
-      StudioSession(fallbackGarmentUrl: garmentUrl ?? '', category: category),
+      StudioSession(
+        fallbackGarmentUrl: garmentUrl ?? '',
+        category: category,
+        isRemoteDock: _dock.isRemote,
+      ),
       loadingSource: sourceId != null,
     );
 
+    // ── Load dock photos (unified: remote or local) ──────────────────
+    final dockPhotos = await _dock.getPhotosWithResults();
+    if (!mounted) return;
+
+    // Also load the legacy local history for the existing SelfieRecord UI.
     final history = await _historyStore.getValidHistory();
     if (!mounted) return;
     SelfieRecord? active;
@@ -116,7 +147,11 @@ class TryonNotifier extends StateNotifier<TryonStudioState> {
 
     // Merge into the live session: a photo picked during the read wins over
     // the restored one.
-    var session = _session.copyWith(history: history);
+    var session = _session.copyWith(
+      history: history,
+      dockPhotos: dockPhotos,
+      isRemoteDock: _dock.isRemote,
+    );
     if (!session.hasSelfie && active != null) {
       session = session.copyWith(
         selectedUrl: active.imageUrl,
@@ -230,11 +265,20 @@ class TryonNotifier extends StateNotifier<TryonStudioState> {
           // First use of a fresh photo: the upload gave it a hosted URL, which
           // becomes its history entry so later try-ons reuse it.
           if (selfieId == null && data.humanImageUrl.isNotEmpty) {
-            final saved = await _historyStore.saveImage(data.humanImageUrl);
-            selfieId = saved.id;
+            // Sync to dock (remote for vendor, local for guest).
+            final dockPhoto = await _dock.addPhoto(data.humanImageUrl);
+            if (dockPhoto != null) selfieId = dockPhoto.id;
+            // Also save locally for the legacy SelfieRecord flow.
+            if (!_dock.isRemote) {
+              final saved = await _historyStore.saveImage(data.humanImageUrl);
+              selfieId = saved.id;
+            }
           } else if (selfieId != null) {
             // Using a photo extends its 20-minute window, as on the website.
-            await _historyStore.promoteToActive(selfieId);
+            await _dock.activatePhoto(selfieId);
+            if (!_dock.isRemote) {
+              await _historyStore.promoteToActive(selfieId);
+            }
           }
           history = await _historyStore.getValidHistory();
           if (selfieId != null) {
@@ -247,13 +291,25 @@ class TryonNotifier extends StateNotifier<TryonStudioState> {
         }
         if (!mounted) return;
 
+        // Refresh dock photos after generation.
+        List<DockPhoto> dockPhotos = session.dockPhotos;
+        try {
+          dockPhotos = await _dock.getPhotosWithResults();
+        } catch (_) {
+          // Non-critical: the dock list updates on next open.
+        }
+
         // From here on the photo is its hosted copy: drop the local file so
         // "Regenerate" reuses the upload instead of sending it again.
         final hosted = data.humanImageUrl.isNotEmpty
             ? data.humanImageUrl
             : session.selectedUrl;
         state = TryonSuccess(
-          session.copyWith(history: history, clearSelfie: true).copyWith(
+          session.copyWith(
+            history: history,
+            dockPhotos: dockPhotos,
+            clearSelfie: true,
+          ).copyWith(
             selectedUrl: hosted,
             activeHistoryId: selfieId,
           ),
@@ -272,6 +328,69 @@ class TryonNotifier extends StateNotifier<TryonStudioState> {
 
   /// Back to the photo step, keeping the selfie so "Regenerate" works.
   void backToStart() => state = TryonInitial(_session);
+
+  // ── Dock photo switching ───────────────────────────────────────────
+
+  /// Switch to a different customer photo from the dock, keeping its
+  /// existing try-on results. This is the key multi-try-on UX: the shopper
+  /// picks a photo, tries multiple garments, and can always switch back
+  /// to any photo and see all its results.
+  Future<void> switchDockPhoto(DockPhoto photo) async {
+    // Activate it in the dock (syncs to backend for vendor).
+    await _dock.activatePhoto(photo.id);
+    if (!mounted) return;
+
+    // Also sync the legacy local history if in local mode.
+    if (!_dock.isRemote) {
+      await _historyStore.promoteToActive(photo.id);
+    }
+    if (!mounted) return;
+
+    final history = await _historyStore.getValidHistory();
+    if (!mounted) return;
+
+    // Refresh dock photos to get the latest state.
+    final dockPhotos = await _dock.getPhotosWithResults();
+    if (!mounted) return;
+
+    final session = _session.copyWith(
+      history: history,
+      dockPhotos: dockPhotos,
+      clearSelfie: true,
+    ).copyWith(
+      selectedUrl: photo.imageUrl,
+      activeHistoryId: photo.id,
+    );
+
+    // If this photo already has results, show them.
+    final results = await _resultsStore.resultsFor(photo.id);
+    if (!mounted) return;
+    state = results.isNotEmpty
+        ? TryonSuccess(session, results: results)
+        : TryonInitial(session);
+  }
+
+  /// Refresh dock photos from the backend (vendor) or local store (guest).
+  Future<void> refreshDock() async {
+    final dockPhotos = await _dock.getPhotosWithResults();
+    if (!mounted) return;
+    final dockGarments = _dock.isRemote ? await _dock.getGarments() : <dynamic>[];
+    if (!mounted) return;
+    final current = state;
+    final updatedSession = _session.copyWith(
+      dockPhotos: dockPhotos,
+      dockGarments: List.from(dockGarments),
+    );
+    state = switch (current) {
+      TryonInitial(:final loadingSource, :final sourceError) =>
+        TryonInitial(updatedSession, loadingSource: loadingSource, sourceError: sourceError),
+      TryonSuccess() => current.copyWith(session: updatedSession),
+      TryonGenerating(:final statusMessage) =>
+        TryonGenerating(updatedSession, statusMessage: statusMessage),
+      TryonError(:final message, :final code) =>
+        TryonError(updatedSession, message: message, code: code),
+    };
+  }
 
   // ── Carousel ───────────────────────────────────────────────────────
 
@@ -442,7 +561,6 @@ final tryonNotifierProvider =
     generateTryon: ref.read(_generateTryonProvider),
     changeBackground: ref.read(_changeBackgroundProvider),
     modifyOutfit: ref.read(_modifyOutfitProvider),
-    historyStore: ref.read(_historyDataSourceProvider),
-    resultsStore: ref.read(_resultsDataSourceProvider),
+    dock: ref.read(_dockFacadeProvider),
   );
 });

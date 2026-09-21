@@ -120,4 +120,41 @@ class ApiEndpoints {
 
   /// Shareable merchant shop link, mirroring the React route `/shop/:vendorId`.
   static String shopLink(String vendorId) => '$webAppUrl/shop/$vendorId';
+
+  // ── Dock (vendor-scoped, shared across devices) ───────────────────────────
+  /// Everything the dock holds: photos with their nested try-on results.
+  static final String dockList = '$baseUrl/api/tryon/dock';
+
+  /// Add a photo to the dock.
+  static final String dockPhotos = '$baseUrl/api/tryon/dock/photos';
+
+  /// Make one photo the active one.
+  static String dockPhotoActivate(String id) =>
+      '$baseUrl/api/tryon/dock/photos/$id/activate';
+
+  /// Heartbeat — extends the 20-minute window and marks "in use".
+  static String dockPhotoTouch(String id) =>
+      '$baseUrl/api/tryon/dock/photos/$id/touch';
+
+  /// Remove a photo (and all results from it).
+  static String dockPhotoDelete(String id) =>
+      '$baseUrl/api/tryon/dock/photos/$id';
+
+  /// Clear the active selection without removing anything.
+  static final String dockDeactivate = '$baseUrl/api/tryon/dock/deactivate';
+
+  /// Garments customers have tried on.
+  static final String dockGarments = '$baseUrl/api/tryon/dock/garments';
+
+  /// Remove a garment's try-on history.
+  static String dockGarmentDelete(String id) =>
+      '$baseUrl/api/tryon/dock/garments/$id';
+
+  /// Heartbeat for a garment being viewed.
+  static String dockGarmentTouch(String id) =>
+      '$baseUrl/api/tryon/dock/garments/$id/touch';
+
+  /// Remove a single try-on result.
+  static String dockResultDelete(String id) =>
+      '$baseUrl/api/tryon/dock/results/$id';
 }

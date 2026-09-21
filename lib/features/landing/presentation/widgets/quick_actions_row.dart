@@ -4,20 +4,18 @@ import '../../../../core/animations/pressable.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 
-/// Four round shortcut buttons under the hero, the way shopping apps surface
+/// Three round shortcut buttons under the hero, the way shopping apps surface
 /// their top destinations without making the user hunt in the tab bar.
 class QuickActionsRow extends StatelessWidget {
   final VoidCallback onTryOn;
   final VoidCallback onCatalog;
   final VoidCallback onMyLooks;
-  final VoidCallback onMerchant;
 
   const QuickActionsRow({
     super.key,
     required this.onTryOn,
     required this.onCatalog,
     required this.onMyLooks,
-    required this.onMerchant,
   });
 
   @override
@@ -46,13 +44,6 @@ class QuickActionsRow extends StatelessWidget {
               icon: Icons.collections_bookmark_outlined,
               label: 'My Looks',
               onTap: onMyLooks,
-            ),
-          ),
-          Expanded(
-            child: _QuickAction(
-              icon: Icons.storefront_outlined,
-              label: 'Merchant',
-              onTap: onMerchant,
             ),
           ),
         ],

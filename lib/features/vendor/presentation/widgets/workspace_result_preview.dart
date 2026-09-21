@@ -69,8 +69,8 @@ class WorkspaceResultPreview extends StatelessWidget {
                   height: 48,
                   child: OutlinedButton.icon(
                     onPressed: onRegenerate,
-                    icon: const Icon(Icons.refresh, size: 14),
-                    label: Text('REGENERATE', style: AppTypography.monoLabel(size: 9, color: AppColors.ink)),
+                    icon: const Icon(Icons.refresh, size: 16),
+                    label: Text('REGENERATE', style: AppTypography.monoLabel(size: 11.5, color: AppColors.ink)),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.ink,
                       side: const BorderSide(color: AppColors.ink),
@@ -105,7 +105,7 @@ class WorkspaceResultPreview extends StatelessWidget {
                               : isGuest
                                   ? 'SIGN IN TO SAVE'
                                   : 'SAVE TO LIBRARY',
-                      style: AppTypography.monoLabel(size: 9, color: AppColors.cream),
+                      style: AppTypography.monoLabel(size: 11.5, color: AppColors.cream),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.ink,
@@ -160,7 +160,7 @@ class WorkspaceResultPreview extends StatelessWidget {
             ),
             child: Text(
               '$modelName — Classic Studio',
-              style: AppTypography.mono(size: 10, weight: FontWeight.w700),
+              style: AppTypography.mono(size: 12, weight: FontWeight.w700),
             ),
           ),
         ),
@@ -196,7 +196,7 @@ class _GeneratingCard extends StatelessWidget {
           Text(
             'Draping fabric on $modelName in Classic Studio',
             textAlign: TextAlign.center,
-            style: AppTypography.mono(size: 10.5, color: AppColors.textSecondary),
+            style: AppTypography.mono(size: 12.5, color: AppColors.textSecondary),
           ),
           const Spacer(),
           Container(
@@ -232,21 +232,21 @@ class _Feature extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
-          Icon(icon, size: 14, color: const Color(0xFF7F5700)),
+          Icon(icon, size: 16, color: const Color(0xFF7F5700)),
           const SizedBox(height: 6),
           Text(
             title,
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: AppTypography.titleMedium.copyWith(fontSize: 8),
+            style: AppTypography.titleMedium.copyWith(fontSize: 10.5, fontWeight: FontWeight.w600),
           ),
           Text(
             subtitle,
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: AppTypography.bodyMedium.copyWith(fontSize: 7, height: 1.3),
+            style: AppTypography.bodyMedium.copyWith(fontSize: 9.5, height: 1.25),
           ),
         ],
       ),

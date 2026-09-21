@@ -57,7 +57,7 @@ class GarmentSlotCard extends StatelessWidget {
             child: Center(
               child: RichText(
                 text: TextSpan(
-                  style: AppTypography.monoLabel(size: 9, letterSpacing: 2),
+                  style: AppTypography.monoLabel(size: 12.5, letterSpacing: 1.2),
                   children: [
                     TextSpan(text: slot.label.toUpperCase()),
                     if (slot.required)
@@ -92,13 +92,13 @@ class GarmentSlotCard extends StatelessWidget {
         const SizedBox(height: 8),
         TextButton.icon(
           onPressed: onRemoved,
-          icon: const Icon(Icons.close_rounded, size: 12),
-          label: Text('REMOVE', style: AppTypography.monoLabel(size: 8.5, color: const Color(0xFFEF4444), letterSpacing: 1)),
+          icon: const Icon(Icons.close_rounded, size: 14),
+          label: Text('REMOVE', style: AppTypography.monoLabel(size: 11.5, color: const Color(0xFFEF4444), letterSpacing: 0.8)),
           style: TextButton.styleFrom(
             foregroundColor: const Color(0xFFEF4444),
             backgroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
@@ -120,10 +120,10 @@ class GarmentSlotCard extends StatelessWidget {
                   color: Color(0xFFF2EFE9),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 16, color: _gold),
+                child: Icon(icon, size: 18, color: _gold),
               ),
               const SizedBox(height: 6),
-              Text(label.toUpperCase(), style: AppTypography.monoLabel(size: 8, letterSpacing: 1.5)),
+              Text(label.toUpperCase(), style: AppTypography.monoLabel(size: 11, letterSpacing: 1.0)),
             ],
           ),
         );
@@ -142,7 +142,7 @@ class GarmentSlotCard extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'JPG, PNG • Max 10MB',
-          style: AppTypography.bodyMedium.copyWith(fontSize: 8, color: AppColors.textMuted),
+          style: AppTypography.bodyMedium.copyWith(fontSize: 11.5, color: AppColors.textSecondary),
         ),
       ],
     );

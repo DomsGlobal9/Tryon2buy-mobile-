@@ -153,7 +153,7 @@ class _AuthMomentViewState extends State<AuthMomentView>
                                 Text(
                                   widget.subtitle.toUpperCase(),
                                   textAlign: TextAlign.center,
-                                  style: AppTypography.eyebrow(size: 10.5, color: muted),
+                                  style: AppTypography.eyebrow(size: 12.5, color: muted),
                                 ),
                               ],
                             ),

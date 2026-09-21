@@ -47,7 +47,7 @@ class LegalScreen extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'EFFECTIVE ${LegalContent.effectiveDate.toUpperCase()}',
-            style: AppTypography.eyebrow(size: 10, color: _gold),
+            style: AppTypography.eyebrow(size: 12, color: _gold),
           ),
           const SizedBox(height: 22),
           for (final line in body) _block(line),
@@ -58,7 +58,7 @@ class LegalScreen extends StatelessWidget {
               icon: const Icon(Icons.mail_outline_rounded, size: 16),
               label: Text(
                 LegalContent.contactEmail.toUpperCase(),
-                style: AppTypography.eyebrow(size: 10, color: AppColors.ink),
+                style: AppTypography.eyebrow(size: 12, color: AppColors.ink),
               ),
             ),
           ),

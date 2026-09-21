@@ -82,7 +82,7 @@ class _PostCard extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(999),
                       ),
-                      child: Text(post.category.toUpperCase(), style: AppTypography.eyebrow(size: 9, color: AppColors.ink)),
+                      child: Text(post.category.toUpperCase(), style: AppTypography.eyebrow(size: 11.5, color: AppColors.ink)),
                     ),
                   ),
                 ],
@@ -139,7 +139,7 @@ class JournalPostScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
         children: [
-          Text(post.category.toUpperCase(), textAlign: TextAlign.center, style: AppTypography.eyebrow(size: 10, color: _gold)),
+          Text(post.category.toUpperCase(), textAlign: TextAlign.center, style: AppTypography.eyebrow(size: 12, color: _gold)),
           const SizedBox(height: 10),
           Text(post.title, textAlign: TextAlign.center, style: AppTypography.display(size: 34)),
           const SizedBox(height: 24),

@@ -157,7 +157,7 @@ class WelcomeScreen extends StatelessWidget {
                             child: Text(
                               'ARE YOU A B2B OR WHOLESALE CLIENT? ACCESS B2B CLIENT PORTAL →',
                               textAlign: TextAlign.center,
-                              style: AppTypography.eyebrow(size: 9.5, color: AppColors.textSecondary),
+                              style: AppTypography.eyebrow(size: 11.5, color: AppColors.textSecondary),
                             ),
                           ),
                         ),
@@ -183,9 +183,9 @@ class _Check extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.check_circle, size: 14, color: AppColors.brandOrange),
+        const Icon(Icons.check_circle, size: 16, color: AppColors.brandOrange),
         const SizedBox(width: 6),
-        Text(text.toUpperCase(), style: AppTypography.eyebrow(size: 10, color: AppColors.ink, letterSpacing: 1)),
+        Text(text.toUpperCase(), style: AppTypography.eyebrow(size: 12, color: AppColors.ink, letterSpacing: 1)),
       ],
     );
   }

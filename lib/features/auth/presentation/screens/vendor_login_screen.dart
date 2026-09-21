@@ -648,9 +648,9 @@ class _Hero extends StatelessWidget {
                       eyebrow,
                       key: ValueKey(eyebrow),
                       style: AppTypography.eyebrow(
-                        size: 10.5,
-                        color: Colors.white.withValues(alpha: 0.85),
-                        letterSpacing: 2.6,
+                        size: 12.5,
+                        color: Colors.white.withValues(alpha: 0.9),
+                        letterSpacing: 2.2,
                       ),
                     ),
                   ),
@@ -753,9 +753,9 @@ class _SegmentedTabs extends StatelessWidget {
                           child: AnimatedDefaultTextStyle(
                             duration: AppMotion.fast,
                             style: AppTypography.eyebrow(
-                              size: 10.5,
-                              letterSpacing: 1.8,
-                              color: i == index ? AppColors.ink : AppColors.textMuted,
+                              size: 12,
+                              letterSpacing: 1.5,
+                              color: i == index ? AppColors.ink : AppColors.textSecondary,
                             ),
                             child: Text(labels[i].toUpperCase()),
                           ),
@@ -819,8 +819,8 @@ class _Field extends StatelessWidget {
         Text(
           label.toUpperCase(),
           style: AppTypography.eyebrow(
-            size: 10,
-            color: dark ? const Color(0xFF9E948A) : AppColors.textSecondary,
+            size: 12,
+            color: dark ? const Color(0xFFB8ADA0) : AppColors.textSecondary,
           ),
         ),
         const SizedBox(height: 8),
@@ -958,7 +958,7 @@ class _PortalSwitch extends StatelessWidget {
         Text(
           question.toUpperCase(),
           textAlign: TextAlign.center,
-          style: AppTypography.eyebrow(size: 9.5, color: const Color(0xFF8C8278)),
+          style: AppTypography.eyebrow(size: 12, color: const Color(0xFF6B655B)),
         ),
         const SizedBox(height: 6),
         TextButton(

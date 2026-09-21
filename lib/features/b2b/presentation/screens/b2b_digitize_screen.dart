@@ -353,7 +353,7 @@ class _B2bDigitizeScreenState extends State<B2bDigitizeScreen> {
             color: const Color(0xFFF3F4F6),
             borderRadius: BorderRadius.circular(999),
           ),
-          child: Text(_category, style: AppTypography.grotesk(size: 10, weight: FontWeight.w600, color: AppColors.textMuted, letterSpacing: 1)),
+          child: Text(_category, style: AppTypography.grotesk(size: 12, weight: FontWeight.w600, color: AppColors.textSecondary, letterSpacing: 1)),
         ),
         children: [
           if (isSaree)
@@ -419,7 +419,7 @@ class _B2bDigitizeScreenState extends State<B2bDigitizeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label.toUpperCase(), style: AppTypography.grotesk(size: 9, weight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 1.5)),
+              Text(label.toUpperCase(), style: AppTypography.grotesk(size: 11.5, weight: FontWeight.w700, color: AppColors.textSecondary, letterSpacing: 1.5)),
               const SizedBox(height: 4),
               Text(value, style: AppTypography.grotesk(size: 14)),
             ],
@@ -456,7 +456,7 @@ class _B2bDigitizeScreenState extends State<B2bDigitizeScreen> {
                         children: [
                           const Icon(Icons.inventory_2_outlined, size: 12, color: _gold),
                           const SizedBox(width: 6),
-                          Text(_category, style: AppTypography.grotesk(size: 10, weight: FontWeight.w700, letterSpacing: 1)),
+                          Text(_category, style: AppTypography.grotesk(size: 12, weight: FontWeight.w700, letterSpacing: 1)),
                         ],
                       ),
                     ),
@@ -537,7 +537,7 @@ class _B2bDigitizeScreenState extends State<B2bDigitizeScreen> {
           const Expanded(child: Divider(color: AppColors.creamBorder)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text(text.toUpperCase(), style: AppTypography.grotesk(size: 10, weight: FontWeight.w700, letterSpacing: 2)),
+            child: Text(text.toUpperCase(), style: AppTypography.grotesk(size: 12, weight: FontWeight.w700, letterSpacing: 2)),
           ),
           const Expanded(child: Divider(color: AppColors.creamBorder)),
         ],
@@ -660,7 +660,7 @@ class _DupattaOption extends StatelessWidget {
               bottom: 10,
               child: Text(
                 style.name.toUpperCase(),
-                style: AppTypography.grotesk(size: 10, weight: FontWeight.w700, color: Colors.white, letterSpacing: 1),
+                style: AppTypography.grotesk(size: 12, weight: FontWeight.w700, color: Colors.white, letterSpacing: 1),
               ),
             ),
             if (selected)

@@ -75,11 +75,11 @@ class SelfieCaptureWidget extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.check, size: 14, color: _orange),
+                const Icon(Icons.check, size: 16, color: _orange),
                 const SizedBox(width: 6),
                 Text(
                   'Photo saved for all try-ons (Expires 20m)',
-                  style: AppTypography.titleMedium.copyWith(fontSize: 9.5),
+                  style: AppTypography.titleMedium.copyWith(fontSize: 12, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -163,8 +163,8 @@ class SelfieCaptureWidget extends StatelessWidget {
         Text(
           'PNG, JPG, HEIC · Max 10 MB',
           style: AppTypography.bodyMedium.copyWith(
-            fontSize: 9,
-            color: const Color(0xFFA0AEC0),
+            fontSize: 11.5,
+            color: AppColors.textSecondary,
           ),
         ),
       ],
@@ -183,12 +183,12 @@ class _OutlineAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return OutlinedButton.icon(
       onPressed: onTap,
-      icon: Icon(icon, size: 14),
-      label: Text(label, style: AppTypography.titleMedium.copyWith(fontSize: 10, color: SelfieCaptureWidget._orange)),
+      icon: Icon(icon, size: 16),
+      label: Text(label, style: AppTypography.titleMedium.copyWith(fontSize: 12, fontWeight: FontWeight.w600, color: SelfieCaptureWidget._orange)),
       style: OutlinedButton.styleFrom(
         foregroundColor: SelfieCaptureWidget._orange,
         side: const BorderSide(color: SelfieCaptureWidget._orange),
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
       ),
     );
@@ -214,8 +214,8 @@ class _SmallAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return OutlinedButton.icon(
       onPressed: onTap,
-      icon: Icon(icon, size: 12),
-      label: Text(label.toUpperCase(), style: AppTypography.monoLabel(size: 9, color: color, letterSpacing: 1)),
+      icon: Icon(icon, size: 14),
+      label: Text(label.toUpperCase(), style: AppTypography.monoLabel(size: 11, color: color, letterSpacing: 1)),
       style: OutlinedButton.styleFrom(
         foregroundColor: color,
         backgroundColor: background ?? Colors.white,

@@ -182,7 +182,7 @@ Future<void> showDemoDialog(BuildContext context) {
               ),
               child: Column(
                 children: [
-                  Text('EMAIL US AT', style: AppTypography.eyebrow(size: 10)),
+                  Text('EMAIL US AT', style: AppTypography.eyebrow(size: 12)),
                   const SizedBox(height: 6),
                   TextButton(
                     onPressed: () => launchUrl(Uri(scheme: 'mailto', path: 'info@tryon2buy.com')),

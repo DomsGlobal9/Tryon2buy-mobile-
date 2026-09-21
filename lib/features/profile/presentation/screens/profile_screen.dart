@@ -82,7 +82,7 @@ class ProfileScreen extends StatelessWidget {
                       ? 'Your draped catalog'
                       : 'Recent try-ons on this device',
                   onTap: () =>
-                      _goToTab(context, 2, AppRouter.customerLibrary),
+                      Navigator.pushNamed(context, AppRouter.customerLibrary),
                 ),
                 _Tile(
                   icon: Icons.checkroom_outlined,

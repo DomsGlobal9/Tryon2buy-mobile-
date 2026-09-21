@@ -141,7 +141,7 @@ class _SampleMaterialsSheetState extends State<SampleMaterialsSheet> {
           child: Text(
             'NO SAMPLE MATERIALS AVAILABLE FOR ${widget.category} YET.',
             textAlign: TextAlign.center,
-            style: AppTypography.monoLabel(size: 10, color: AppColors.textMuted),
+            style: AppTypography.monoLabel(size: 12.5, color: AppColors.textSecondary),
           ),
         ),
       ];
@@ -290,8 +290,8 @@ class _Rule extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: Text(title.toUpperCase(), style: AppTypography.monoLabel(size: 9.5))),
-          if (done) const Icon(Icons.check, size: 14, color: Color(0xFF16A34A)),
+          Expanded(child: Text(title.toUpperCase(), style: AppTypography.monoLabel(size: 12))),
+          if (done) const Icon(Icons.check, size: 16, color: Color(0xFF16A34A)),
         ],
       ),
     );
@@ -340,7 +340,7 @@ class _SampleTile extends StatelessWidget {
                       color: Colors.black.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(3),
                     ),
-                    child: Text(badge!.toUpperCase(), style: AppTypography.monoLabel(size: 7, color: Colors.white, letterSpacing: 1)),
+                    child: Text(badge!.toUpperCase(), style: AppTypography.monoLabel(size: 10.5, color: Colors.white, letterSpacing: 1)),
                   ),
                 ),
               if (selected)

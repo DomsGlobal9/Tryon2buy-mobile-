@@ -208,7 +208,7 @@ class _Canvas extends StatelessWidget {
                     child: Text(
                       caption!.toUpperCase(),
                       style: AppTypography.monoLabel(
-                          size: 9, color: Colors.white),
+                          size: 11.5, color: Colors.white),
                     ),
                   ),
                 ),
@@ -269,7 +269,7 @@ class _InitialBody extends StatelessWidget {
         Text(
           'For the best try-on experience, please follow the guidelines below.',
           textAlign: TextAlign.center,
-          style: AppTypography.bodyMedium.copyWith(fontSize: 11.5),
+          style: AppTypography.bodyMedium.copyWith(fontSize: 13.5),
         ),
         const SizedBox(height: 14),
 
@@ -280,7 +280,7 @@ class _InitialBody extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Text(
                 'Framing example',
-                style: AppTypography.titleMedium.copyWith(fontSize: 11.5),
+                style: AppTypography.titleMedium.copyWith(fontSize: 13),
               ),
             ),
             const Expanded(child: Divider(color: Color(0xFFED8936))),
@@ -308,11 +308,11 @@ class _InitialBody extends StatelessWidget {
           icon: Icons.lightbulb_outline_rounded,
           child: RichText(
             text: TextSpan(
-              style: AppTypography.bodyMedium.copyWith(fontSize: 11),
+              style: AppTypography.bodyMedium.copyWith(fontSize: 13),
               children: [
                 TextSpan(
                   text: 'Note: ',
-                  style: AppTypography.titleMedium.copyWith(fontSize: 11),
+                  style: AppTypography.titleMedium.copyWith(fontSize: 13),
                 ),
                 const TextSpan(
                   text: 'For the best fit visualization, please upload a clear, '
@@ -333,11 +333,15 @@ class _InitialBody extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        if (session.history.any((h) => !h.isActive)) ...[
+        if (session.dockPhotos.isNotEmpty ||
+            session.history.any((h) => !h.isActive)) ...[
           ImageHistoryDock(
             history: session.history,
+            dockPhotos: session.dockPhotos,
             activeImageId: session.activeHistoryId,
+            isRemoteDock: session.isRemoteDock,
             onSelectImage: notifier.selectFromHistory,
+            onSelectDockPhoto: (photo) => notifier.switchDockPhoto(photo),
             onAddImage: () async {
               final file = await ImagePickerHelper.pickFromGallery();
               if (file != null) notifier.selectFile(file);
@@ -569,7 +573,7 @@ class _BackgroundPanel extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           'Select a background and apply it to your try-on.',
-          style: AppTypography.mono(size: 10.5, color: AppColors.textMuted),
+          style: AppTypography.mono(size: 13, color: AppColors.textSecondary),
         ),
         const SizedBox(height: 16),
         GridView.builder(
@@ -791,8 +795,8 @@ class _SegmentTab extends StatelessWidget {
             label.toUpperCase(),
             textAlign: TextAlign.center,
             style: AppTypography.monoLabel(
-              size: 10,
-              color: selected ? AppColors.ink : AppColors.textMuted,
+              size: 12.5,
+              color: selected ? AppColors.ink : AppColors.textSecondary,
             ),
           ),
         ),
@@ -875,7 +879,7 @@ class _OptionTile extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.monoLabel(
-                    size: 8.5,
+                    size: 11.5,
                     color: Colors.white,
                     letterSpacing: 1,
                   ),
@@ -933,14 +937,14 @@ class _PrivacyNotes extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.only(top: 2),
-              child: Icon(icon, size: 12, color: const Color(0xFFDD6B20)),
+              child: Icon(icon, size: 14, color: const Color(0xFFDD6B20)),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 text,
                 style: AppTypography.bodyMedium.copyWith(
-                  fontSize: 10.5,
+                  fontSize: 12.5,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -1086,7 +1090,7 @@ class _ShareRow extends StatelessWidget {
           child: OutlinedButton.icon(
             onPressed: () => _copy(context),
             icon: const Icon(Icons.link_rounded, size: 16),
-            label: Text('COPY LINK', style: AppTypography.monoLabel(size: 9)),
+            label: Text('COPY LINK', style: AppTypography.monoLabel(size: 11.5)),
             style: style(),
           ),
         ),
@@ -1095,7 +1099,7 @@ class _ShareRow extends StatelessWidget {
           child: OutlinedButton.icon(
             onPressed: () => _open(context),
             icon: const Icon(Icons.open_in_new_rounded, size: 16),
-            label: Text('OPEN ON WEB', style: AppTypography.monoLabel(size: 9)),
+            label: Text('OPEN ON WEB', style: AppTypography.monoLabel(size: 11.5)),
             style: style(),
           ),
         ),

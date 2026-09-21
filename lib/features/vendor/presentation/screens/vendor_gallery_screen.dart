@@ -192,17 +192,17 @@ class _VendorGalleryScreenState extends State<VendorGalleryScreen> {
               children: [
                 Text(
                   'YOUR BEAUTIFULLY DRAPED CATALOG READY TO BE SHARED WITH CUSTOMERS.',
-                  style: AppTypography.monoLabel(size: 9.5, color: AppColors.textMuted),
+                  style: AppTypography.monoLabel(size: 12, color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
-                  height: 44,
+                  height: 46,
                   child: OutlinedButton.icon(
                     onPressed: vendorId == null
                         ? null
                         : () => _copy(ApiEndpoints.shopLink(vendorId), 'Gallery Link Copied!'),
-                    icon: const Icon(Icons.share_outlined, size: 14),
-                    label: Text('SHARE FULL GALLERY', style: AppTypography.monoLabel(size: 9, color: AppColors.ink)),
+                    icon: const Icon(Icons.share_outlined, size: 16),
+                    label: Text('SHARE FULL GALLERY', style: AppTypography.monoLabel(size: 12, color: AppColors.ink)),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.ink,
                       side: const BorderSide(color: AppColors.ink),
@@ -328,18 +328,18 @@ class _DrapeCard extends StatelessWidget {
             (drape.category ?? 'Draped Garment').toUpperCase(),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: AppTypography.monoLabel(size: 9),
+            style: AppTypography.monoLabel(size: 12),
           ),
           const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
                 child: SizedBox(
-                  height: 34,
+                  height: 36,
                   child: OutlinedButton.icon(
                     onPressed: onShare,
-                    icon: const Icon(Icons.copy_rounded, size: 11),
-                    label: Text('SHARE', style: AppTypography.monoLabel(size: 8, color: AppColors.ink, letterSpacing: 1)),
+                    icon: const Icon(Icons.copy_rounded, size: 13),
+                    label: Text('SHARE', style: AppTypography.monoLabel(size: 11, color: AppColors.ink, letterSpacing: 1)),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.ink,
                       backgroundColor: AppColors.cream,
@@ -352,11 +352,11 @@ class _DrapeCard extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               SizedBox(
-                height: 34,
+                height: 36,
                 child: ElevatedButton.icon(
                   onPressed: onTryOn,
-                  icon: const Icon(Icons.open_in_new_rounded, size: 11),
-                  label: Text('TRYON', style: AppTypography.monoLabel(size: 8, color: AppColors.cream, letterSpacing: 1)),
+                  icon: const Icon(Icons.open_in_new_rounded, size: 13),
+                  label: Text('TRYON', style: AppTypography.monoLabel(size: 11, color: AppColors.cream, letterSpacing: 1)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: gold,
                     foregroundColor: AppColors.cream,

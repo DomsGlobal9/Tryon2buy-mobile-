@@ -214,7 +214,7 @@ class AboutScreen extends StatelessWidget {
           Center(
             child: TextButton(
               onPressed: () => launchUrl(Uri(scheme: 'mailto', path: 'info@tryon2buy.com')),
-              child: Text('INFO@TRYON2BUY.COM', style: AppTypography.eyebrow(size: 10)),
+              child: Text('INFO@TRYON2BUY.COM', style: AppTypography.eyebrow(size: 12.5)),
             ),
           ),
         ],

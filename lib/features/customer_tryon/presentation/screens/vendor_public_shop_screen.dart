@@ -145,7 +145,7 @@ class _VendorPublicShopScreenState extends State<VendorPublicShopScreen> {
                   const SizedBox(height: 6),
                   Text(
                     'SELECT A PIECE YOU LOVE AND SEE HOW IT LOOKS ON YOU — VIRTUALLY.',
-                    style: AppTypography.monoLabel(size: 9.5, color: AppColors.textMuted),
+                    style: AppTypography.monoLabel(size: 12, color: AppColors.textSecondary),
                   ),
                 ],
               ),
@@ -212,18 +212,18 @@ class _CollectionCard extends StatelessWidget {
             item.title.toUpperCase(),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: AppTypography.monoLabel(size: 9),
+            style: AppTypography.monoLabel(size: 12),
           ),
           const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
                 child: SizedBox(
-                  height: 36,
+                  height: 38,
                   child: ElevatedButton.icon(
                     onPressed: onTryOn,
-                    icon: const Icon(Icons.auto_awesome, size: 11),
-                    label: Text('TRY THIS ON', style: AppTypography.monoLabel(size: 8, color: AppColors.cream, letterSpacing: 1)),
+                    icon: const Icon(Icons.auto_awesome, size: 13),
+                    label: Text('TRY THIS ON', style: AppTypography.monoLabel(size: 11, color: AppColors.cream, letterSpacing: 1)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.ink,
                       foregroundColor: AppColors.cream,

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tryon2buy/core/utils/result.dart';
+import 'package:tryon2buy/features/customer_tryon/data/datasources/dock_facade.dart';
 import 'package:tryon2buy/features/customer_tryon/data/datasources/history_local_data_source.dart';
 import 'package:tryon2buy/features/customer_tryon/data/datasources/tryon_results_local_data_source.dart';
 import 'package:tryon2buy/features/customer_tryon/domain/entities/tryon_result.dart';
@@ -79,8 +80,11 @@ TryonNotifier _notifier(_FakeRepo repo) => TryonNotifier(
       generateTryon: GenerateVirtualTryonUseCase(repo),
       changeBackground: ChangeBackgroundUseCase(repo),
       modifyOutfit: ModifyOutfitStyleUseCase(repo),
-      historyStore: HistoryLocalDataSource(),
-      resultsStore: TryonResultsLocalDataSource(),
+      dock: DockFacade(
+        remoteRepository: null,
+        localHistory: HistoryLocalDataSource(),
+        localResults: TryonResultsLocalDataSource(),
+      ),
     );
 
 /// Lets queued async work (the SharedPreferences mock) run.

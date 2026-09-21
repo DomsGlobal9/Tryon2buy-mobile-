@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/animations/reveal_on_scroll.dart';
-import '../../../../core/session/auth_session.dart';
-import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../routes/app_router.dart';
 import '../../../catalog/data/models/dress_product_model.dart';
 import '../../../shell/presentation/screens/main_shell_screen.dart';
 import '../../../shop/data/shop_repository.dart';
-import '../../../vendor/presentation/merchant_portal.dart';
 import '../widgets/category_rail.dart';
 import '../widgets/home_header.dart';
 import '../widgets/home_hero_carousel.dart';
 import '../widgets/home_search_bar.dart';
 import '../widgets/how_it_works_strip.dart';
-import '../widgets/merchant_banner.dart';
 import '../widgets/quick_actions_row.dart';
 import '../widgets/trending_rail.dart';
 
@@ -59,9 +55,9 @@ class _LandingScreenState extends State<LandingScreen> {
   }
 
   void _openDiscover() => _goToTab(1, AppRouter.catalog);
-  void _openMyLooks() => _goToTab(2, AppRouter.customerLibrary);
+  void _openTryOn() => _goToTab(2, AppRouter.vendorWorkspace);
+  void _openMyLooks() => Navigator.pushNamed(context, AppRouter.customerLibrary);
   void _openProfile() => _goToTab(3, AppRouter.profile);
-  void _openMerchant() => openMerchantPortal(context);
   void _openSearch() => AppRouter.openSearch(context);
 
   void _openCategory(String category) =>
@@ -75,18 +71,7 @@ class _LandingScreenState extends State<LandingScreen> {
         generationId: product.generationId,
       );
 
-  /// The website's "Continue as Guest": straight into the studio, no
-  /// account needed. A signed-in business goes to its own workspace.
-  Future<void> _openWorkspace() async {
-    if (AuthSession.instance.isVendorSignedIn) {
-      await openMerchantPortal(context);
-      return;
-    }
-    final storage = await LocalStorageService.getInstance();
-    await storage.setGuestMode(true);
-    if (!mounted) return;
-    Navigator.pushNamed(context, AppRouter.vendorWorkspace);
-  }
+
 
   Future<void> _refresh() async {
     // Pull-to-refresh must reach the server, not the shared 90s cache.
@@ -126,18 +111,16 @@ class _LandingScreenState extends State<LandingScreen> {
                   // Above the fold: RevealOnScroll fires on first frame.
                   RevealOnScroll(
                     child: HomeHeroCarousel(
-                      onTryOn: _openDiscover,
-                      onMerchant: _openMerchant,
+                      onTryOn: _openTryOn,
                     ),
                   ),
                   const SizedBox(height: 22),
 
                   RevealOnScroll(
                     child: QuickActionsRow(
-                      onTryOn: _openWorkspace,
+                      onTryOn: _openTryOn,
                       onCatalog: _openDiscover,
                       onMyLooks: _openMyLooks,
-                      onMerchant: _openMerchant,
                     ),
                   ),
                   const SizedBox(height: 28),
@@ -157,11 +140,6 @@ class _LandingScreenState extends State<LandingScreen> {
                   const SizedBox(height: 28),
 
                   const RevealOnScroll(child: HowItWorksStrip()),
-                  const SizedBox(height: 24),
-
-                  RevealOnScroll(
-                    child: MerchantBanner(onTap: _openMerchant),
-                  ),
                   const SizedBox(height: 28),
                 ]),
               ),

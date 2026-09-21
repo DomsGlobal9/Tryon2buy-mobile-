@@ -30,21 +30,21 @@ class AppTypography {
   }) =>
       GoogleFonts.ebGaramond(
         fontSize: size,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w600,
         fontStyle: style,
-        height: 1.05,
-        letterSpacing: -0.5,
+        height: 1.1,
+        letterSpacing: -0.3,
         color: color,
       );
 
   static TextStyle get displayLarge => display(size: 34);
   static TextStyle get displayMedium => display(size: 28);
-  static TextStyle get titleLarge => display(size: 22);
+  static TextStyle get titleLarge => display(size: 23);
 
   /// Sub-headings inside cards and rows. The website sets these in the
   /// running sans at bold weight, not in the serif.
   static TextStyle get titleMedium => GoogleFonts.inter(
-        fontSize: 16,
+        fontSize: 16.5,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
       );
@@ -52,29 +52,29 @@ class AppTypography {
   // ── Body (Inter / Montserrat) ──────────────────────────────────────────
 
   static TextStyle get bodyLarge => GoogleFonts.inter(
-        fontSize: 15,
-        fontWeight: FontWeight.w400,
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
         color: AppColors.textPrimary,
-        height: 1.55,
+        height: 1.5,
       );
 
   static TextStyle get bodyMedium => GoogleFonts.inter(
-        fontSize: 13,
-        fontWeight: FontWeight.w400,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
         color: AppColors.textSecondary,
-        height: 1.5,
+        height: 1.45,
       );
 
   /// Marketing pages (home, about, solutions, journal) sit on Montserrat.
   static TextStyle marketing({
-    double size = 14,
-    FontWeight weight = FontWeight.w400,
+    double size = 15,
+    FontWeight weight = FontWeight.w500,
     Color color = AppColors.textSecondary,
   }) =>
       GoogleFonts.montserrat(
         fontSize: size,
         fontWeight: weight,
-        height: 1.55,
+        height: 1.5,
         color: color,
       );
 
@@ -82,9 +82,9 @@ class AppTypography {
 
   /// Small tracked uppercase label. Callers upper-case the string.
   static TextStyle eyebrow({
-    double size = 10,
-    Color color = AppColors.textMuted,
-    double letterSpacing = 1.6,
+    double size = 12,
+    Color color = AppColors.textSecondary,
+    double letterSpacing = 1.4,
   }) =>
       GoogleFonts.outfit(
         fontSize: size,
@@ -94,19 +94,19 @@ class AppTypography {
       );
 
   static TextStyle get labelSmall => GoogleFonts.outfit(
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textMuted,
-        letterSpacing: 0.6,
+        fontSize: 12.5,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textSecondary,
+        letterSpacing: 0.5,
       );
 
   // ── Buttons and nav (Merriweather) ─────────────────────────────────────
 
   /// Website buttons: Merriweather bold, uppercase, wide tracking.
   static TextStyle cta({
-    double size = 11,
+    double size = 13.5,
     Color color = AppColors.textWhite,
-    double letterSpacing = 2,
+    double letterSpacing = 1.4,
   }) =>
       GoogleFonts.merriweather(
         fontSize: size,
@@ -121,8 +121,8 @@ class AppTypography {
 
   /// Body text in the merchant studio, galleries and the fitting room.
   static TextStyle mono({
-    double size = 12,
-    FontWeight weight = FontWeight.w400,
+    double size = 13,
+    FontWeight weight = FontWeight.w500,
     Color color = AppColors.textPrimary,
     double letterSpacing = 0,
   }) =>
@@ -136,20 +136,20 @@ class AppTypography {
 
   /// Tracked uppercase step labels ("1 SELECT CATEGORY").
   static TextStyle monoLabel({
-    double size = 10,
+    double size = 12,
     Color color = AppColors.textPrimary,
-    double letterSpacing = 1.5,
+    double letterSpacing = 1.2,
   }) =>
       mono(size: size, weight: FontWeight.w700, color: color, letterSpacing: letterSpacing);
 
   /// Studio panel headings ("Virtual Fitting Room").
   static TextStyle studioHeading({
-    double size = 18,
+    double size = 20,
     Color color = AppColors.textPrimary,
   }) =>
       GoogleFonts.playfairDisplay(
         fontSize: size,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w600,
         height: 1.2,
         color: color,
       );
@@ -157,8 +157,8 @@ class AppTypography {
   // ── B2B portal (Space Grotesk) ─────────────────────────────────────────
 
   static TextStyle grotesk({
-    double size = 14,
-    FontWeight weight = FontWeight.w500,
+    double size = 15,
+    FontWeight weight = FontWeight.w600,
     Color color = AppColors.textPrimary,
     double letterSpacing = 0,
   }) =>

@@ -232,7 +232,7 @@ class _LookTile extends StatelessWidget {
                   ),
                   child: Text(
                     look.category!.toUpperCase(),
-                    style: AppTypography.eyebrow(size: 9, color: AppColors.textWhite, letterSpacing: 1),
+                    style: AppTypography.eyebrow(size: 11.5, color: AppColors.textWhite, letterSpacing: 1),
                   ),
                 ),
               ),

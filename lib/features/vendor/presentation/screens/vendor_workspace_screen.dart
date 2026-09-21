@@ -306,8 +306,8 @@ class _VendorWorkspaceScreenState extends State<VendorWorkspaceScreen> {
         actions: [
           TextButton.icon(
             onPressed: _openGallery,
-            icon: const Icon(Icons.image_outlined, size: 14),
-            label: Text('GALLERY', style: AppTypography.monoLabel(size: 9)),
+            icon: const Icon(Icons.image_outlined, size: 16),
+            label: Text('GALLERY', style: AppTypography.monoLabel(size: 11.5)),
             style: TextButton.styleFrom(foregroundColor: AppColors.ink),
           ),
           IconButton(
@@ -350,8 +350,8 @@ class _VendorWorkspaceScreenState extends State<VendorWorkspaceScreen> {
           Center(
             child: OutlinedButton.icon(
               onPressed: _openSamples,
-              icon: const Icon(Icons.image_outlined, size: 14),
-              label: Text('SAMPLE MATERIALS', style: AppTypography.monoLabel(size: 9.5)),
+              icon: const Icon(Icons.image_outlined, size: 16),
+              label: Text('SAMPLE MATERIALS', style: AppTypography.monoLabel(size: 12)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.textSecondary,
                 backgroundColor: const Color(0xFFFDFCF9),
@@ -379,12 +379,12 @@ class _VendorWorkspaceScreenState extends State<VendorWorkspaceScreen> {
             height: 54,
             child: ElevatedButton.icon(
               onPressed: _uploadsValid && !_isGenerating ? _generate : null,
-              icon: const Icon(Icons.auto_awesome, size: 14),
+              icon: const Icon(Icons.auto_awesome, size: 16),
               label: Text(
                 'GENERATE TRY-ON',
                 style: AppTypography.cta(
                   color: _uploadsValid ? AppColors.cream : AppColors.textMuted,
-                  letterSpacing: 3,
+                  letterSpacing: 1.5,
                 ),
               ),
               style: ElevatedButton.styleFrom(
@@ -498,17 +498,17 @@ class _StepHeader extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 20,
-          height: 20,
+          width: 22,
+          height: 22,
           color: AppColors.ink,
           alignment: Alignment.center,
           child: Text(
             '$number',
-            style: AppTypography.mono(size: 10, weight: FontWeight.w700, color: AppColors.cream),
+            style: AppTypography.mono(size: 11, weight: FontWeight.w700, color: AppColors.cream),
           ),
         ),
         const SizedBox(width: 8),
-        Text(title.toUpperCase(), style: AppTypography.monoLabel(size: 11)),
+        Text(title.toUpperCase(), style: AppTypography.monoLabel(size: 12.5)),
       ],
     );
   }
@@ -540,8 +540,8 @@ class _CategoryChip extends StatelessWidget {
         child: Text(
           label,
           style: AppTypography.monoLabel(
-            size: 10,
-            color: selected ? gold : AppColors.textMuted,
+            size: 12,
+            color: selected ? gold : AppColors.textSecondary,
             letterSpacing: 1,
           ),
         ),
@@ -565,11 +565,11 @@ class _NoteBanner extends StatelessWidget {
       ),
       child: RichText(
         text: TextSpan(
-          style: AppTypography.bodyMedium.copyWith(fontSize: 11, color: const Color(0xFF854D0E)),
+          style: AppTypography.bodyMedium.copyWith(fontSize: 13, color: const Color(0xFF854D0E)),
           children: [
             TextSpan(
               text: 'Note: ',
-              style: AppTypography.titleMedium.copyWith(fontSize: 11, color: const Color(0xFF713F12)),
+              style: AppTypography.titleMedium.copyWith(fontSize: 13, color: const Color(0xFF713F12)),
             ),
             TextSpan(text: text),
           ],
@@ -590,7 +590,7 @@ class _SectionRule extends StatelessWidget {
         const Expanded(child: Divider(color: AppColors.creamBorder)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Text(text.toUpperCase(), style: AppTypography.monoLabel(size: 9, letterSpacing: 2)),
+          child: Text(text.toUpperCase(), style: AppTypography.monoLabel(size: 11.5, letterSpacing: 1.5)),
         ),
         const Expanded(child: Divider(color: AppColors.creamBorder)),
       ],
@@ -639,7 +639,7 @@ class _DupattaTile extends StatelessWidget {
               bottom: 10,
               child: Text(
                 style.name.toUpperCase(),
-                style: AppTypography.monoLabel(size: 8.5, color: Colors.white, letterSpacing: 1),
+                style: AppTypography.monoLabel(size: 11.5, color: Colors.white, letterSpacing: 1),
               ),
             ),
             if (selected)
@@ -714,14 +714,14 @@ class _ModelGrid extends StatelessWidget {
                                     models[i].name.toUpperCase(),
                                     overflow: TextOverflow.ellipsis,
                                     style: AppTypography.monoLabel(
-                                      size: 7,
+                                      size: 10.5,
                                       color: AppColors.cream,
                                       letterSpacing: 0.5,
                                     ),
                                   ),
                                 ),
                                 if (models[i].name == selected.name)
-                                  const Icon(Icons.check, size: 8, color: AppColors.cream),
+                                  const Icon(Icons.check, size: 12, color: AppColors.cream),
                               ],
                             ),
                           ),

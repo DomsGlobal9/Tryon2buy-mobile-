@@ -6,8 +6,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../catalog/presentation/screens/catalog_browser_screen.dart';
 import '../../../landing/presentation/screens/landing_screen.dart';
-import '../../../library/presentation/screens/customer_library_screen.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
+import '../../../vendor/presentation/screens/vendor_workspace_screen.dart';
 
 /// Lets a descendant switch shell tabs without knowing about the shell.
 ///
@@ -31,13 +31,13 @@ class MainShellScope extends InheritedWidget {
   bool updateShouldNotify(MainShellScope oldWidget) => false;
 }
 
-/// The app's persistent navigation shell: Home · Discover · My Looks · Profile.
+/// The app's persistent navigation shell: Home · Discover · Try On · Profile.
 ///
 /// All four tabs stay mounted in an [IndexedStack] so switching back preserves
 /// scroll position and fetched data. Merchant access lives on the Profile tab
-/// and the home screen rather than taking a tab of its own.
+/// rather than taking a tab of its own.
 class MainShellScreen extends StatefulWidget {
-  /// Tab to open on first build. 0 Home · 1 Discover · 2 My Looks · 3 Profile.
+  /// Tab to open on first build. 0 Home · 1 Discover · 2 Try On · 3 Profile.
   final int initialIndex;
 
   const MainShellScreen({super.key, this.initialIndex = 0});
@@ -79,7 +79,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
             // you are actually looking at.
             _KeepAlive(active: _index == 0, child: const LandingScreen()),
             _KeepAlive(active: _index == 1, child: const CatalogBrowserScreen()),
-            _KeepAlive(active: _index == 2, child: const CustomerLibraryScreen()),
+            _KeepAlive(active: _index == 2, child: const VendorWorkspaceScreen()),
             _KeepAlive(active: _index == 3, child: const ProfileScreen()),
           ],
         ),
@@ -183,10 +183,10 @@ class _BottomNav extends StatelessWidget {
             surfaceTintColor: Colors.transparent,
             labelTextStyle: WidgetStateProperty.resolveWith(
               (states) => AppTypography.bodyMedium.copyWith(
-                fontSize: 11.5,
+                fontSize: 13,
                 fontWeight: states.contains(WidgetState.selected)
-                    ? FontWeight.w600
-                    : FontWeight.w500,
+                    ? FontWeight.w700
+                    : FontWeight.w600,
                 color: states.contains(WidgetState.selected)
                     ? AppColors.textPrimary
                     : AppColors.textSecondary,
@@ -219,9 +219,9 @@ class _BottomNav extends StatelessWidget {
                 label: 'Discover',
               ),
               NavigationDestination(
-                icon: Icon(Icons.collections_bookmark_outlined),
-                selectedIcon: Icon(Icons.collections_bookmark_rounded),
-                label: 'My Looks',
+                icon: Icon(Icons.auto_awesome_outlined),
+                selectedIcon: Icon(Icons.auto_awesome),
+                label: 'Try On',
               ),
               NavigationDestination(
                 icon: Icon(Icons.person_outline_rounded),

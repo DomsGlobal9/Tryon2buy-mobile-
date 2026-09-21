@@ -10,12 +10,12 @@ import '../../../../core/theme/app_typography.dart';
 /// headline and a single pill CTA, so it reads at a glance while scrolling.
 class HomeHeroCarousel extends StatefulWidget {
   final VoidCallback onTryOn;
-  final VoidCallback onMerchant;
+  final VoidCallback? onMerchant;
 
   const HomeHeroCarousel({
     super.key,
     required this.onTryOn,
-    required this.onMerchant,
+    this.onMerchant,
   });
 
   @override
@@ -45,10 +45,10 @@ class _HomeHeroCarouselState extends State<HomeHeroCarousel> {
     ),
     _HeroSlide(
       asset: 'assets/images/tryon_models.png',
-      eyebrow: 'FOR BOUTIQUES',
-      title: 'Digitize your\ncatalog in minutes',
-      cta: 'Merchant Portal',
-      onTap: widget.onMerchant,
+      eyebrow: 'ETHNIC FASHION',
+      title: 'Mix, match & drape\nyour own styles',
+      cta: 'Explore Outfits',
+      onTap: widget.onTryOn,
     ),
   ];
 
@@ -175,7 +175,7 @@ class _HeroCard extends StatelessWidget {
                   Text(
                     slide.eyebrow,
                     style: GoogleFonts.outfit(
-                      fontSize: 10,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 2,
                       color: AppColors.brandOrange,
@@ -185,8 +185,8 @@ class _HeroCard extends StatelessWidget {
                   Text(
                     slide.title,
                     style: GoogleFonts.ebGaramond(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 29,
+                      fontWeight: FontWeight.w600,
                       height: 1.05,
                       color: Colors.white,
                     ),
@@ -194,7 +194,7 @@ class _HeroCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
+                        horizontal: 16, vertical: 9),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(999),
@@ -205,13 +205,13 @@ class _HeroCard extends StatelessWidget {
                         Text(
                           slide.cta,
                           style: AppTypography.buttonText.copyWith(
-                            fontSize: 12.5,
+                            fontSize: 13.5,
                             color: AppColors.textPrimary,
                           ),
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 5),
                         const Icon(Icons.arrow_forward_rounded,
-                            size: 15, color: AppColors.textPrimary),
+                            size: 16, color: AppColors.textPrimary),
                       ],
                     ),
                   ),

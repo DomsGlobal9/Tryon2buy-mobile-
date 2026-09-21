@@ -78,9 +78,9 @@ class OutfitCard extends StatelessWidget {
                         child: Text(
                           badge!.toUpperCase(),
                           style: AppTypography.labelSmall.copyWith(
-                            fontSize: 9.5,
+                            fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            letterSpacing: 1,
+                            letterSpacing: 0.8,
                             color: AppColors.textWhite,
                           ),
                         ),
@@ -98,26 +98,27 @@ class OutfitCard extends StatelessWidget {
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTypography.titleMedium.copyWith(fontSize: 13.5),
+                    style: AppTypography.titleMedium.copyWith(fontSize: 15),
                   ),
                   if (subtitle != null && subtitle!.isNotEmpty) ...[
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 3),
                     Text(
                       subtitle!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTypography.bodyMedium.copyWith(fontSize: 11.5),
+                      style: AppTypography.bodyMedium.copyWith(fontSize: 13),
                     ),
                   ],
-                  const SizedBox(height: 7),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       const Icon(Icons.auto_awesome,
-                          size: 12, color: AppColors.brandOrange),
-                      const SizedBox(width: 4),
+                          size: 14, color: AppColors.brandOrange),
+                      const SizedBox(width: 5),
                       Text(
                         ctaLabel,
                         style: AppTypography.labelSmall.copyWith(
+                          fontSize: 13,
                           color: AppColors.brandOrange,
                           fontWeight: FontWeight.w700,
                         ),

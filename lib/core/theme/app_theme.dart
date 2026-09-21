@@ -56,7 +56,7 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
-          textStyle: AppTypography.cta(color: AppColors.primary, size: 10.5),
+          textStyle: AppTypography.cta(color: AppColors.primary, size: 13),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
