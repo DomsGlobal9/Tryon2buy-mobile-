@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -142,10 +143,10 @@ class WorkspaceResultPreview extends StatelessWidget {
             ),
             child: Image(image: provider, fit: BoxFit.cover),
           ),
-          placeholder: (_, __) => const Center(
+          placeholder: (_, _) => const Center(
             child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.brandOrange),
           ),
-          errorWidget: (_, __, ___) => const Center(
+          errorWidget: (_, _, _) => const Center(
             child: Icon(Icons.broken_image_outlined, size: 48, color: Colors.black26),
           ),
         ),
@@ -182,12 +183,20 @@ class _GeneratingCard extends StatelessWidget {
       child: Column(
         children: [
           const Spacer(),
-          const SizedBox(
-            width: 64,
-            height: 64,
-            child: CircularProgressIndicator(strokeWidth: 3, color: AppColors.brandOrange),
+          Lottie.asset(
+            'assets/animations/tryon_fitting.json',
+            width: 140,
+            height: 140,
+            repeat: true,
+            errorBuilder: (context, error, stackTrace) {
+              return const SizedBox(
+                width: 64,
+                height: 64,
+                child: CircularProgressIndicator(strokeWidth: 3, color: AppColors.brandOrange),
+              );
+            },
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
           Text(
             'Creating AI Catalog Shoot...',
             style: AppTypography.mono(size: 13, weight: FontWeight.w700),

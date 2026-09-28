@@ -46,9 +46,13 @@ Future<bool> showUpgradeDialog(
   return _showBrandDialog(
     context,
     title: 'Out of Credits',
+    // No number here, deliberately. The website carried "5" while every
+    // allowance is in fact 10, so it said one thing and the sibling dialog
+    // said another; the count was removed rather than corrected, because it
+    // varies by plan and the copy would drift again.
     body: customer
-        ? "You've used all 5 of your free try-ons! Contact the boutique to get unlimited access and keep trying on beautiful outfits."
-        : "You've used all 5 of your free merchant try-ons! Subscribe to our Unlimited Plan to keep generating stunning personalized fits for your customers.",
+        ? 'The free try-ons for this shop have all been used. Please ask the boutique for more, and keep trying on beautiful outfits.'
+        : "You've used all of your free merchant try-ons! Subscribe to our Unlimited Plan to keep generating stunning personalized fits for your customers.",
     primaryLabel: 'Contact Us to Upgrade',
     primaryColor: const Color(0xFFC4933F),
     onPrimary: () => launchUrl(Uri(

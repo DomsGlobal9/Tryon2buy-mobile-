@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -50,6 +51,16 @@ class RemoteImage extends StatelessWidget {
     } else if (trimmed.startsWith('assets/')) {
       content = Image.asset(
         trimmed,
+        width: width,
+        height: height,
+        fit: fit,
+        cacheWidth: decodeWidth,
+        errorBuilder: (context, error, stackTrace) => _fallback(),
+      );
+    } else if (trimmed.startsWith('/') || trimmed.startsWith('file:')) {
+      final path = trimmed.startsWith('file://') ? trimmed.substring(7) : trimmed;
+      content = Image.file(
+        File(path),
         width: width,
         height: height,
         fit: fit,

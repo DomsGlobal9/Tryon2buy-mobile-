@@ -91,7 +91,7 @@ class CatalogRepository {
       body: {
         'garment_image_url': garmentSlots,
         'category': category,
-        if (dupattaStyleUrl != null) 'dupatta_style_url': dupattaStyleUrl,
+        'dupatta_style_url': ?dupattaStyleUrl,
       },
       role: AuthRole.vendor,
       // Multi-piece drapes run past the ordinary timeout; giving up early
@@ -117,8 +117,8 @@ class CatalogRepository {
         'generation_id': generationId,
         'title': title,
         'category': category,
-        if (description != null) 'description': description,
-        if (sku != null) 'sku': sku,
+        'description': ?description,
+        'sku': ?sku,
       },
       role: AuthRole.vendor,
     );

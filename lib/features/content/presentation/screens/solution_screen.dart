@@ -197,7 +197,7 @@ class SolutionsIndexScreen extends StatelessWidget {
       body: ListView.separated(
         padding: const EdgeInsets.all(20),
         itemCount: SiteContent.solutions.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
+        separatorBuilder: (_, _) => const SizedBox(height: 10),
         itemBuilder: (context, i) {
           final s = SiteContent.solutions[i];
           return Material(

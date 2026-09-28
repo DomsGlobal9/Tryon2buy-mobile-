@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -131,6 +132,33 @@ class LocalStorageService {
       _preferences?.getString(_keyPortalType) ?? 'merchant';
 
   bool get isB2bPortal => getPortalType() == 'b2b';
+
+  // ── Guest device id ────────────────────────────────────────────────────
+  // Sent with a generation when there is no account, so the server counts a
+  // guest's free tries against this install rather than against the network
+  // address. Without it every phone in a boutique shares one allowance, and
+  // the first customer of the day spends it for everybody.
+  //
+  // It is random and identifies nobody. The server still caps a whole
+  // network, so clearing it is not an unlimited supply.
+  static const String _keyGuestDeviceId = 'guest_device_id';
+
+  /// This install's guest id, minted on first use. Null when storage is
+  /// unavailable, in which case the server falls back to counting by address.
+  Future<String?> getOrCreateGuestDeviceId() async {
+    final prefs = _preferences;
+    if (prefs == null) return null;
+
+    final existing = prefs.getString(_keyGuestDeviceId);
+    if (existing != null && existing.isNotEmpty) return existing;
+
+    final random = Random.secure();
+    final id = List<int>.generate(16, (_) => random.nextInt(256))
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join();
+    await prefs.setString(_keyGuestDeviceId, id);
+    return id;
+  }
 
   // ── Recent searches ────────────────────────────────────────────────────
   static const String _keyRecentSearches = 'recent_searches';

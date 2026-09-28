@@ -101,31 +101,59 @@ class ApiClient {
     return '${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}-$hex';
   }
 
+  /// How often to ask, and how long to keep asking. Both match the website's
+  /// `generationRecovery.js`, because the thing being outlasted is the same:
+  /// the backend allows the model five attempts of up to 180 s each, so a
+  /// client that gives up in under a minute abandons work it has paid for.
+  static const Duration recoveryPollInterval = Duration(seconds: 4);
+  static const Duration recoveryMaxWait = Duration(minutes: 16);
+
+  /// How long a "never heard of it" is forgiven before we conclude the
+  /// request never arrived. The row is written early but not instantly, so
+  /// the first few polls can genuinely 404 on work that is running.
+  static const Duration recoveryNotFoundGrace = Duration(seconds: 20);
+
   /// Asks the server what became of the generation sent under [clientRequestId].
   ///
   /// Returns the completed payload, or null when the work failed, was never
   /// started, or is still running after the window below. The credit is
   /// already spent by the time a response goes missing, so it is worth
-  /// waiting a while rather than making the user pay twice.
+  /// waiting a long while rather than making the user pay twice.
+  ///
+  /// [isCancelled] lets a caller that has gone away stop the wait.
   static Future<Map<String, dynamic>?> recoverGeneration(
     String clientRequestId, {
-    int attempts = 6,
+    Duration pollInterval = recoveryPollInterval,
+    Duration maxWait = recoveryMaxWait,
+    Duration notFoundGrace = recoveryNotFoundGrace,
+    bool Function()? isCancelled,
   }) async {
-    for (var attempt = 0; attempt < attempts; attempt++) {
-      await Future<void>.delayed(
-        Duration(seconds: attempt == 0 ? 2 : 10),
-      );
+    final startedAt = DateTime.now();
+    bool elapsedBeyond(Duration d) => DateTime.now().difference(startedAt) > d;
+
+    // Once the row has been seen, a later 404 is an anomaly rather than
+    // "never started", so the grace period stops applying.
+    var seen = false;
+
+    while (!elapsedBeyond(maxWait)) {
+      if (isCancelled?.call() ?? false) return null;
+      await Future<void>.delayed(pollInterval);
+      if (isCancelled?.call() ?? false) return null;
 
       final res = await get<Map<String, dynamic>>(
         ApiEndpoints.generationStatus(clientRequestId),
         role: AuthRole.none,
       );
 
-      // A 404 means the request never reached the server, so there is
-      // nothing to wait for and nothing was charged.
-      if (res.statusCode == 404) return null;
+      if (res.statusCode == 404) {
+        if (!seen && elapsedBeyond(notFoundGrace)) return null;
+        continue;
+      }
 
       final data = res.data;
+      // Offline, a DNS blip, a proxy hiccup: none of these mean the
+      // generation failed. Keep waiting; outlasting the connection is the
+      // whole point.
       if (!res.success || data == null) continue;
 
       switch (data['status']) {
@@ -134,7 +162,7 @@ class ApiClient {
         case 'FAILED':
           return null;
         default:
-          continue; // still running
+          seen = true; // PROCESSING: the work is genuinely running
       }
     }
     return null;

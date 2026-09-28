@@ -2,6 +2,7 @@ import 'dart:io';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_response.dart';
+import '../../../../core/storage/local_storage_service.dart';
 
 class VendorRepository {
   Future<ApiResponse<String>> uploadGarmentImage(
@@ -46,6 +47,16 @@ class VendorRepository {
     // spent either way, and an unclaimed one is an orphan nobody can reach.
     final clientRequestId = ApiClient.newRequestId();
 
+    // The workspace is open to guests as well as merchants. A guest's free
+    // tries are counted against this install; without the id the server
+    // counts by network address, so one boutique's wifi shares a single
+    // allowance. A signed-in merchant is charged to the account instead.
+    final token = await ApiClient.tokenFor(AuthRole.vendor);
+    final guestDeviceId = (token == null || token.isEmpty)
+        ? await (await LocalStorageService.getInstance())
+            .getOrCreateGuestDeviceId()
+        : null;
+
     final response = await ApiClient.post<Map<String, dynamic>>(
       ApiEndpoints.generateTryon,
       body: {
@@ -54,8 +65,9 @@ class VendorRepository {
         'human_image_url': modelImageUrl,
         'target_folder': ApiEndpoints.targetVendorDrapes,
         'client_request_id': clientRequestId,
-        if (category != null) 'category': category,
-        if (garmentId != null) 'garment_id': garmentId,
+        'category': ?category,
+        'garment_id': ?garmentId,
+        'guest_device_id': ?guestDeviceId,
         // Sent even when null: the website always includes the key.
         'dupatta_style_url': dupattaStyleUrl,
       },

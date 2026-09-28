@@ -168,54 +168,59 @@ class _HeroCard extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    slide.eyebrow,
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 2,
-                      color: AppColors.brandOrange,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.bottomLeft,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      slide.eyebrow,
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2,
+                        color: AppColors.brandOrange,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    slide.title,
-                    style: GoogleFonts.ebGaramond(
-                      fontSize: 29,
-                      fontWeight: FontWeight.w600,
-                      height: 1.05,
-                      color: Colors.white,
+                    const SizedBox(height: 6),
+                    Text(
+                      slide.title,
+                      style: GoogleFonts.ebGaramond(
+                        fontSize: 29,
+                        fontWeight: FontWeight.w600,
+                        height: 1.05,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 9),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          slide.cta,
-                          style: AppTypography.buttonText.copyWith(
-                            fontSize: 13.5,
-                            color: AppColors.textPrimary,
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 9),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            slide.cta,
+                            style: AppTypography.buttonText.copyWith(
+                              fontSize: 13.5,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 5),
-                        const Icon(Icons.arrow_forward_rounded,
-                            size: 16, color: AppColors.textPrimary),
-                      ],
+                          const SizedBox(width: 5),
+                          const Icon(Icons.arrow_forward_rounded,
+                              size: 16, color: AppColors.textPrimary),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],

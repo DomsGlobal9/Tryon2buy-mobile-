@@ -381,7 +381,7 @@ class _VendorLoginScreenState extends State<VendorLoginScreen> {
   static Widget _topAligned(Widget? current, List<Widget> previous) {
     return Stack(
       alignment: Alignment.topCenter,
-      children: [...previous, if (current != null) current],
+      children: [...previous, ?current],
     );
   }
 

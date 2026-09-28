@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:lottie/lottie.dart';
 
 import 'package:tryon2buy/core/animations/app_motion.dart';
 import 'package:tryon2buy/core/constants/api_endpoints.dart';
 import 'package:tryon2buy/core/constants/preset_data.dart';
+import 'package:tryon2buy/core/errors/failures.dart';
 import 'package:tryon2buy/core/session/auth_session.dart';
 import 'package:tryon2buy/core/theme/app_colors.dart';
 import 'package:tryon2buy/core/theme/app_typography.dart';
@@ -16,6 +18,8 @@ import 'package:tryon2buy/core/widgets/empty_state_view.dart';
 import 'package:tryon2buy/core/widgets/image_history_dock.dart';
 import 'package:tryon2buy/core/widgets/remote_image.dart';
 import 'package:tryon2buy/routes/app_router.dart';
+import '../../domain/entities/dock_garment.dart';
+import '../../domain/entities/dock_photo.dart';
 import '../../domain/entities/tryon_result.dart';
 import '../state/tryon_notifier.dart';
 import '../state/tryon_state.dart';
@@ -91,7 +95,13 @@ class _CustomerTryonStudioScreenState
         if (signIn && mounted) await _openSignIn();
 
       case TryonErrorCode.insufficientCredits:
-        await showUpgradeDialog(context);
+        // A shopper is not the account holder and cannot subscribe to
+        // anything: they are told to ask the boutique. Only a signed-in
+        // merchant sees the plan pitch, which is how the website decides it.
+        await showUpgradeDialog(
+          context,
+          customer: !AuthSession.instance.isVendorSignedIn,
+        );
       default:
         UiHelpers.showSnackBar(context, message, isError: true);
     }
@@ -124,6 +134,12 @@ class _CustomerTryonStudioScreenState
       }
     });
 
+    final session = state.session;
+    final totalDockItems = (session.dockPhotos.isNotEmpty
+            ? session.dockPhotos.length
+            : session.history.length) +
+        session.dockGarments.length;
+
     return Scaffold(
       backgroundColor: AppColors.cream,
       appBar: AppBar(
@@ -148,6 +164,140 @@ class _CustomerTryonStudioScreenState
             notifier: notifier,
           ),
       },
+      floatingActionButton: totalDockItems > 0
+          ? FloatingActionButton.extended(
+              heroTag: 'dock_floating_btn',
+              onPressed: () => _openDockSheet(
+                context,
+                session,
+                notifier,
+                state is TryonGenerating ||
+                    (state is TryonSuccess && state.isPostProcessing),
+              ),
+              backgroundColor: Colors.white,
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+                side: const BorderSide(color: AppColors.border),
+              ),
+              icon: Badge(
+                label: Text('$totalDockItems'),
+                backgroundColor: const Color(0xFFDD6B20),
+                textColor: Colors.white,
+                child: const Icon(Icons.access_time,
+                    color: Color(0xFFDD6B20), size: 20),
+              ),
+              label: Text(
+                'Photo Dock',
+                style: AppTypography.monoLabel(
+                  size: 12,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            )
+          : null,
+    );
+  }
+
+  void _openDockSheet(
+    BuildContext context,
+    StudioSession session,
+    TryonNotifier notifier,
+    bool busy,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) => SafeArea(
+        child: Container(
+          padding:
+              const EdgeInsets.only(top: 14, bottom: 20, left: 16, right: 16),
+          decoration: const BoxDecoration(
+            color: AppColors.cream,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 20,
+                offset: Offset(0, -4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    session.isRemoteDock
+                        ? 'PHOTOS & TRIED LOOKS'
+                        : 'RECENT SELFIES (20m DOCK)',
+                    style: AppTypography.monoLabel(
+                        size: 13, color: AppColors.textPrimary),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(sheetContext),
+                    child: const Icon(Icons.close,
+                        size: 20, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Photos automatically expire 20 minutes after their last use.',
+                style: AppTypography.mono(
+                    size: 11.5, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 14),
+              ImageHistoryDock(
+                history: session.history,
+                dockPhotos: session.dockPhotos,
+                garments: session.dockGarments,
+                activeImageId: session.activeHistoryId,
+                activeGarmentAssetId: session.source?.generationId,
+                isRemoteDock: session.isRemoteDock,
+                busy: busy,
+                onSelectImage: (record) {
+                  Navigator.pop(sheetContext);
+                  notifier.selectFromHistory(record);
+                },
+                onSelectDockPhoto: (photo) {
+                  Navigator.pop(sheetContext);
+                  notifier.switchDockPhoto(photo);
+                },
+                onDeleteDockPhoto: session.isRemoteDock
+                    ? (photo) => _DockSection.removePhoto(context, notifier, photo)
+                    : null,
+                onSelectGarment: (garment) {
+                  Navigator.pop(sheetContext);
+                  notifier.switchGarment(garment);
+                },
+                onDeleteGarment: (garment) =>
+                    _DockSection.removeGarment(context, notifier, garment),
+                onAddImage: () async {
+                  Navigator.pop(sheetContext);
+                  final file = await ImagePickerHelper.pickFromGallery();
+                  if (file != null) notifier.selectFile(file);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -213,7 +363,7 @@ class _Canvas extends StatelessWidget {
                   ),
                 ),
               ),
-            if (overlay != null) overlay!,
+            ?overlay,
           ],
         ),
       ),
@@ -333,23 +483,9 @@ class _InitialBody extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        if (session.dockPhotos.isNotEmpty ||
-            session.history.any((h) => !h.isActive)) ...[
-          ImageHistoryDock(
-            history: session.history,
-            dockPhotos: session.dockPhotos,
-            activeImageId: session.activeHistoryId,
-            isRemoteDock: session.isRemoteDock,
-            onSelectImage: notifier.selectFromHistory,
-            onSelectDockPhoto: (photo) => notifier.switchDockPhoto(photo),
-            onAddImage: () async {
-              final file = await ImagePickerHelper.pickFromGallery();
-              if (file != null) notifier.selectFile(file);
-            },
-          ),
-          const SizedBox(height: 12),
-        ],
-
+        // No dock here. Choosing a photo is what the capture widget above is
+        // for; the dock itself lives behind the floating "Photo Dock" button,
+        // which is the only place it should appear.
         _PrivacyNotes(),
         const SizedBox(height: 18),
 
@@ -458,6 +594,11 @@ class _SuccessBody extends StatelessWidget {
           onRemove: notifier.clearSelfie,
         ),
         const SizedBox(height: 12),
+
+        // The dock lives here too: "Try This" on a tried outfit is most
+        // useful while looking at a result, not only before the first one.
+        // As on the photo step: the dock is the floating button's, not the
+        // page's. Two copies of it on one screen was the bug.
 
         SizedBox(
           height: 52,
@@ -609,6 +750,98 @@ class _BackgroundPanel extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// Dock
+// ═══════════════════════════════════════════════════════════════════════
+
+/// The two destructive dock flows, shared by whatever is showing the dock.
+///
+/// Not a widget any more. The dock used to be rendered inline in the page
+/// *and* inside the floating button's sheet, which put two of them on screen
+/// at once; the sheet is now the only one, and this is what is left.
+abstract final class _DockSection {
+  /// Confirm, delete; and if a colleague is being fitted with this photo on
+  /// another device (409), say what that costs them before going ahead.
+  static Future<void> removePhoto(
+    BuildContext context,
+    TryonNotifier notifier,
+    DockPhoto photo,
+  ) async {
+    final count = photo.resultCount;
+    final ok = await UiHelpers.confirm(
+      context,
+      title: 'Remove this photo?',
+      message: count == 0
+          ? 'It comes off the dock on every device signed in to this shop.'
+          : 'The $count try-${count == 1 ? 'on' : 'ons'} made from it go too, '
+              'on every device signed in to this shop.',
+      confirmLabel: 'Remove',
+      cancelLabel: 'Keep it',
+      destructive: true,
+    );
+    if (!ok || !context.mounted) return;
+
+    var failure = await notifier.deletePhoto(photo);
+
+    if (failure is ServerFailure && failure.statusCode == 409) {
+      if (!context.mounted) return;
+      final anyway = await UiHelpers.confirm(
+        context,
+        title: 'Someone is being fitted with this photo',
+        message: 'They are on another device, and removing it takes the photo '
+            'off their screen along with the try-ons made from it.',
+        confirmLabel: 'Remove anyway',
+        cancelLabel: 'Leave it',
+        destructive: true,
+      );
+      if (!anyway || !context.mounted) return;
+      failure = await notifier.deletePhoto(photo, force: true);
+    }
+
+    if (failure != null && context.mounted) {
+      UiHelpers.showSnackBar(context, failure.message, isError: true);
+    }
+  }
+
+  /// Confirm, delete; and if a colleague on another device is fitting this
+  /// outfit right now (409), say so and offer to remove it anyway.
+  static Future<void> removeGarment(
+    BuildContext context,
+    TryonNotifier notifier,
+    DockGarment garment,
+  ) async {
+    final name = garment.title.isEmpty ? 'this outfit' : garment.title;
+    final ok = await UiHelpers.confirm(
+      context,
+      title: 'Remove $name?',
+      message: 'Its recent try-ons come off the list. The product itself '
+          'stays in your catalogue and can be tried on again.',
+      confirmLabel: 'Remove',
+      destructive: true,
+    );
+    if (!ok || !context.mounted) return;
+
+    var failure = await notifier.deleteGarment(garment);
+
+    if (failure is ServerFailure && failure.statusCode == 409) {
+      if (!context.mounted) return;
+      final anyway = await UiHelpers.confirm(
+        context,
+        title: 'Someone is trying this on',
+        message: '${failure.message} Remove it anyway?',
+        confirmLabel: 'Remove anyway',
+        destructive: true,
+      );
+      if (!anyway || !context.mounted) return;
+      failure = await notifier.deleteGarment(garment, force: true);
+    }
+
+    if (failure != null && context.mounted) {
+      UiHelpers.showSnackBar(context, failure.message, isError: true);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 // Small pieces
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -618,15 +851,23 @@ class _BusyOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white.withValues(alpha: 0.6),
+      color: Colors.white.withValues(alpha: 0.85),
       alignment: Alignment.center,
-      child: const SizedBox(
-        width: 48,
-        height: 48,
-        child: CircularProgressIndicator(
-          strokeWidth: 3,
-          valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandOrange),
-        ),
+      child: Lottie.asset(
+        'assets/animations/tryon_fitting.json',
+        width: 220,
+        height: 220,
+        repeat: true,
+        errorBuilder: (context, error, stackTrace) {
+          return const SizedBox(
+            width: 48,
+            height: 48,
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandOrange),
+            ),
+          );
+        },
       ),
     );
   }
@@ -852,7 +1093,7 @@ class _OptionTile extends StatelessWidget {
                     child: Image.asset(
                       imageUrl,
                       fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const ColoredBox(
+                      errorBuilder: (_, _, _) => const ColoredBox(
                         color: AppColors.backgroundLight,
                         child: Icon(Icons.image_outlined, color: AppColors.textMuted),
                       ),

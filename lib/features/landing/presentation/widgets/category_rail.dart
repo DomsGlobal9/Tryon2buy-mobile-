@@ -41,7 +41,7 @@ class CategoryRail extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             physics: const BouncingScrollPhysics(),
             itemCount: _categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 16),
+            separatorBuilder: (_, _) => const SizedBox(width: 16),
             itemBuilder: (context, i) {
               final c = _categories[i];
               return Pressable(

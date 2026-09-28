@@ -63,12 +63,21 @@ class HistoryLocalDataSource {
   }
 
   /// Promote a specific record to active, deactivating all others.
+  ///
+  /// Also restarts the promoted record's 20-minute window. The window is a
+  /// *sliding* one — "twenty minutes since it was last used", the same clock
+  /// the server's `activatePhoto` resets — so a shopper who keeps trying
+  /// garments on with the same photo never has it expire mid-fitting. This
+  /// used to leave `lastUsedAt` untouched, which made the window fixed from
+  /// the upload instead.
   Future<void> promoteToActive(String id) async {
     final prefs = await SharedPreferences.getInstance();
     final history = await getValidHistory();
+    final now = DateTime.now();
 
     final updated = history.map((r) {
-      return r.copyWith(isActive: r.id == id);
+      final active = r.id == id;
+      return r.copyWith(isActive: active, lastUsedAt: active ? now : null);
     }).toList();
 
     await _persist(prefs, updated);

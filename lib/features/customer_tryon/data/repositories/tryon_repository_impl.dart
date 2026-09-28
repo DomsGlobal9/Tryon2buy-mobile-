@@ -30,6 +30,8 @@ class TryonRepositoryImpl implements ITryonRepository {
     String? parentGenerationId,
     String? category,
     String? targetFolder,
+    String? dupattaStyleUrl,
+    String? dockPhotoId,
   }) async {
     return _guard(() async {
       final dto = await _remote.generateTryon(
@@ -39,6 +41,8 @@ class TryonRepositoryImpl implements ITryonRepository {
         parentGenerationId: parentGenerationId,
         category: category,
         targetFolder: targetFolder,
+        dupattaStyleUrl: dupattaStyleUrl,
+        dockPhotoId: dockPhotoId,
       );
       return dto.toEntity();
     });

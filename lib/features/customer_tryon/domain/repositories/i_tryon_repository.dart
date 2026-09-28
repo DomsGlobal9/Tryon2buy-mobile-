@@ -18,6 +18,11 @@ abstract interface class ITryonRepository {
   /// was started from (the website's `/tryon/:id`); the server derives the
   /// owning vendor and the phase from it. [targetFolder] is where the result
   /// is stored, e.g. `results/tryon-results`.
+  ///
+  /// [dupattaStyleUrl] is an optional lehenga drape reference the server
+  /// turns into a structural prompt. [dockPhotoId] is the server-side dock
+  /// photograph the try-on belongs to; without it the dock cannot group or
+  /// delete the result. Both are omitted from the request when null.
   Future<Result<TryonResult>> executeTryon({
     required String garmentUrl,
     required String humanImageUrl,
@@ -25,6 +30,8 @@ abstract interface class ITryonRepository {
     String? parentGenerationId,
     String? category,
     String? targetFolder,
+    String? dupattaStyleUrl,
+    String? dockPhotoId,
   });
 
   /// Swap the background of an existing try-on result.

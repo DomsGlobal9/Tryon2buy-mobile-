@@ -97,7 +97,7 @@ class _TrendingRailState extends State<TrendingRail> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       physics: const BouncingScrollPhysics(),
       itemCount: _products.length,
-      separatorBuilder: (_, __) => const SizedBox(width: 12),
+      separatorBuilder: (_, _) => const SizedBox(width: 12),
       itemBuilder: (context, i) {
         final product = _products[i];
         return FadeSlideIn(
@@ -130,8 +130,8 @@ class _SkeletonRail extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       physics: const NeverScrollableScrollPhysics(),
       itemCount: 3,
-      separatorBuilder: (_, __) => const SizedBox(width: 12),
-      itemBuilder: (_, __) => Container(
+      separatorBuilder: (_, _) => const SizedBox(width: 12),
+      itemBuilder: (_, _) => Container(
         width: cardWidth,
         decoration: BoxDecoration(
           color: AppColors.surface,

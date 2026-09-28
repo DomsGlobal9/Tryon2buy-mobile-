@@ -110,11 +110,17 @@ class _VendorGalleryScreenState extends State<VendorGalleryScreen> {
   }
 
   Future<void> _delete(_Drape drape) async {
+    // Say what this actually does. It is not a gallery tidy-up: the drape is
+    // the product's photograph, so deleting it takes the garment out of the
+    // catalogue and breaks the link anyone has been given for it.
     final ok = await UiHelpers.confirm(
       context,
-      title: 'Delete this try-on?',
-      message: 'Are you sure you want to delete this try-on from your gallery?',
-      confirmLabel: 'Delete',
+      title: 'Delete this drape from your catalogue?',
+      message: 'This is the draped photo of the garment. Deleting it removes '
+          'the product from your catalogue too, so nobody can try that garment '
+          'on any more. Its share link stops working, and it cannot be undone.',
+      confirmLabel: 'Delete product',
+      cancelLabel: 'Keep it',
       destructive: true,
     );
     if (!ok || !mounted) return;
@@ -129,7 +135,13 @@ class _VendorGalleryScreenState extends State<VendorGalleryScreen> {
       ShopRepository.invalidateCache();
     } else {
       setState(() => _drapes = before);
-      UiHelpers.showSnackBar(context, 'Failed to delete: ${res.error}', isError: true);
+      // Raw server text told the merchant nothing they could act on and
+      // leaked internals onto the screen.
+      UiHelpers.showSnackBar(
+        context,
+        'That drape could not be deleted. Please try again.',
+        isError: true,
+      );
     }
   }
 

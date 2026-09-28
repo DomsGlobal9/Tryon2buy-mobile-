@@ -131,13 +131,16 @@ class GarmentSlotCard extends StatelessWidget {
     return Column(
       children: [
         const SizedBox(height: 6),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            action(Icons.upload_rounded, 'Gallery', () => _pick(false)),
-            const SizedBox(width: 22),
-            action(Icons.camera_alt_outlined, 'Camera', () => _pick(true)),
-          ],
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              action(Icons.upload_rounded, 'Gallery', () => _pick(false)),
+              const SizedBox(width: 16),
+              action(Icons.camera_alt_outlined, 'Camera', () => _pick(true)),
+            ],
+          ),
         ),
         const SizedBox(height: 8),
         Text(

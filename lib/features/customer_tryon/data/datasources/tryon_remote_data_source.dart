@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:tryon2buy/core/constants/api_endpoints.dart';
 import 'package:tryon2buy/core/errors/exceptions.dart';
 import 'package:tryon2buy/core/network/api_client.dart';
+import 'package:tryon2buy/core/storage/local_storage_service.dart';
 import '../models/tryon_generation_dto.dart';
 
 /// Low-level HTTP data source for the try-on backend.
@@ -56,24 +57,43 @@ class TryonRemoteDataSource {
     String? catalogProductId,
     String? frontViewUrl,
     String? targetFolder,
+    String? dupattaStyleUrl,
+    String? dockPhotoId,
   }) async {
     // The server records this against the row before it calls the model, so
     // a result whose response is lost can still be claimed afterwards.
     final clientRequestId = ApiClient.newRequestId();
+
+    // Guests are counted per device; a signed-in merchant is charged to the
+    // account instead. Sent only when there is no token, as on the website —
+    // without it the server falls back to counting by network address and a
+    // whole shop shares one free allowance.
+    final guestDeviceId = await _guestDeviceId(AuthRole.any);
 
     final body = <String, dynamic>{
       'mode': mode,
       'garment_image_url': garmentUrl,
       'human_image_url': humanImageUrl,
       'client_request_id': clientRequestId,
-      if (category != null) 'category': category,
-      if (parentGenerationId != null) 'parent_generation_id': parentGenerationId,
-      if (targetFolder != null) 'target_folder': targetFolder,
+      'category': ?category,
+      'parent_generation_id': ?parentGenerationId,
+      'target_folder': ?targetFolder,
       // Links the row back to its source so the vendor gallery and catalog
       // can join on it. All three are optional on the server.
-      if (garmentId != null) 'garment_id': garmentId,
-      if (catalogProductId != null) 'catalog_product_id': catalogProductId,
-      if (frontViewUrl != null) 'front_view_url': frontViewUrl,
+      'garment_id': ?garmentId,
+      'catalog_product_id': ?catalogProductId,
+      'front_view_url': ?frontViewUrl,
+      // A lehenga dupatta drape reference. The server downloads it, injects
+      // it as a "DUPATTA STYLE REFERENCE" image, and switches the prompt to
+      // the matching structural blueprint (`style_1` / `style_2`).
+      'dupatta_style_url': ?dupattaStyleUrl,
+      // Which dock photograph this try-on was made from. The dock service
+      // groups results under a photo *only* by this key (it deliberately does
+      // not use vendorId), and proves ownership for delete through it — so a
+      // vendor's result sent without it is invisible in the dock and cannot
+      // be removed from it.
+      'dock_photo_id': ?dockPhotoId,
+      'guest_device_id': ?guestDeviceId,
     };
 
     try {
@@ -116,7 +136,7 @@ class TryonRemoteDataSource {
       {
         'imageUrl': imageUrl,
         'backgroundId': backgroundId,
-        if (generationId != null) 'generationId': generationId,
+        'generationId': ?generationId,
       },
       // Whichever token exists; a guest sends none and the server applies
       // its free-tier limit, as on the website.
@@ -138,7 +158,7 @@ class TryonRemoteDataSource {
       {
         'imageUrl': imageUrl,
         'modificationType': modificationType,
-        if (generationId != null) 'generationId': generationId,
+        'generationId': ?generationId,
       },
       // Whichever token exists; a guest sends none and the server applies
       // its free-tier limit, as on the website.
@@ -212,6 +232,15 @@ class TryonRemoteDataSource {
     } catch (e) {
       throw ServerException(statusCode: 0, message: e.toString());
     }
+  }
+
+  /// This install's guest id, or null when a token for [role] will be sent
+  /// (the account is charged instead) or storage is unavailable.
+  static Future<String?> _guestDeviceId(AuthRole role) async {
+    final token = await ApiClient.tokenFor(role);
+    if (token != null && token.isNotEmpty) return null;
+    final storage = await LocalStorageService.getInstance();
+    return storage.getOrCreateGuestDeviceId();
   }
 
   Map<String, dynamic> _decodeMap(http.Response response) =>

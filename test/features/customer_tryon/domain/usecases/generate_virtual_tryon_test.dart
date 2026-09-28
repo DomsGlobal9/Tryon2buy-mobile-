@@ -24,6 +24,8 @@ class FakeTryonRepository implements ITryonRepository {
     String? parentGenerationId,
     String? category,
     String? targetFolder,
+    String? dupattaStyleUrl,
+    String? dockPhotoId,
   }) async {
     if (failureToReturn != null) {
       return Fail(failureToReturn!);

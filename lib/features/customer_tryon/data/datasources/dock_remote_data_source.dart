@@ -113,7 +113,7 @@ class DockRemoteDataSource {
       final response = await ApiClient.client
           .get(Uri.parse(url), headers: await _headers())
           .timeout(ApiClient.timeoutDuration);
-      _guardStatus(response);
+      await _guardStatus(response);
       return response;
     });
   }
@@ -123,7 +123,7 @@ class DockRemoteDataSource {
       final response = await ApiClient.client
           .post(Uri.parse(url), headers: await _headers(), body: jsonEncode(body))
           .timeout(ApiClient.timeoutDuration);
-      _guardStatus(response);
+      await _guardStatus(response);
       return response;
     });
   }
@@ -133,7 +133,7 @@ class DockRemoteDataSource {
       final response = await ApiClient.client
           .delete(uri, headers: await _headers())
           .timeout(ApiClient.timeoutDuration);
-      _guardStatus(response);
+      await _guardStatus(response);
       return response;
     });
   }
@@ -157,7 +157,7 @@ class DockRemoteDataSource {
     }
   }
 
-  void _guardStatus(http.Response response) {
+  Future<void> _guardStatus(http.Response response) async {
     if (response.statusCode >= 200 && response.statusCode < 300) return;
 
     // 409 Conflict is not an error for dock operations — it means "in use".
@@ -171,6 +171,15 @@ class DockRemoteDataSource {
     } catch (_) {
       message = 'Server returned status ${response.statusCode}';
     }
+
+    // Every dock route carries the vendor token, so a 401 here means that
+    // token is dead. Drop it, exactly as the try-on data source does, or the
+    // app goes on showing a signed-in merchant whose every request fails.
+    // There is no guest quota on these routes, so no exception to make.
+    if (response.statusCode == 401) {
+      await ApiClient.onUnauthorized(AuthRole.vendor);
+    }
+
     throw ServerException(statusCode: response.statusCode, message: message);
   }
 

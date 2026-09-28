@@ -22,6 +22,8 @@ class _ThrowingRemote extends TryonRemoteDataSource {
     String? catalogProductId,
     String? frontViewUrl,
     String? targetFolder,
+    String? dupattaStyleUrl,
+    String? dockPhotoId,
   }) async {
     throw toThrow;
   }

@@ -1,4 +1,5 @@
 import 'package:tryon2buy/core/session/auth_session.dart';
+import 'package:tryon2buy/core/utils/result.dart';
 
 import '../../domain/entities/dock_garment.dart';
 import '../../domain/entities/dock_photo.dart';
@@ -95,14 +96,40 @@ class DockFacade {
   }
 
   /// Delete a photo (and all its results).
-  Future<void> deletePhoto(String photoId, {bool force = false}) async {
-    if (isRemote) {
-      await _remote!.deletePhoto(photoId, force: force);
-    }
+  ///
+  /// Returned rather than swallowed, like [deleteGarment]: a 409 means a
+  /// colleague on another device is being fitted with this photograph, and
+  /// deleting it takes their customer off their screen. The caller asks
+  /// before retrying with [force].
+  Future<Result<void>> deletePhoto(String photoId, {bool force = false}) async {
     // Local dock has no explicit delete — photos expire after 20 minutes.
+    if (!isRemote) return const Success<void>(null);
+    return _remote!.deletePhoto(photoId, force: force);
+  }
+
+  /// Heartbeat for a garment being viewed — "somebody has this open", so a
+  /// colleague deleting it from another device is warned first.
+  Future<void> touchGarment(String garmentId) async {
+    if (isRemote) await _remote!.touchGarment(garmentId);
+  }
+
+  /// Removes an outfit from the "tried on" list by erasing the try-ons that
+  /// put it there. The product itself is untouched.
+  ///
+  /// Returned rather than swallowed: a 409 means someone on another device
+  /// is fitting this outfit right now, and the caller should confirm before
+  /// retrying with [force]. Guests have no garment list, so this is a no-op
+  /// for them.
+  Future<Result<void>> deleteGarment(String garmentId, {bool force = false}) async {
+    if (!isRemote) return const Success<void>(null);
+    return _remote!.deleteGarment(garmentId, force: force);
   }
 
   /// Delete a single try-on result.
+  ///
+  /// For a merchant this has to reach the server: the dock is shared, so a
+  /// result removed only on this phone stays on every other device the shop
+  /// has open.
   Future<void> deleteResult(String resultId, {String? selfieId}) async {
     if (isRemote) {
       await _remote!.deleteResult(resultId);

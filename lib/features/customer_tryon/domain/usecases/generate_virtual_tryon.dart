@@ -23,6 +23,8 @@ class GenerateVirtualTryonUseCase {
     String? parentGenerationId,
     String? category,
     String? targetFolder,
+    String? dupattaStyleUrl,
+    String? dockPhotoId,
   }) async {
     // ── Input validation (pure business rules) ─────────────────────
     if (garmentUrl.trim().isEmpty) {
@@ -54,6 +56,8 @@ class GenerateVirtualTryonUseCase {
       parentGenerationId: parentGenerationId,
       category: category,
       targetFolder: targetFolder,
+      dupattaStyleUrl: dupattaStyleUrl,
+      dockPhotoId: dockPhotoId,
     );
 
     // The server echoes the human URL it received; make sure the entity the

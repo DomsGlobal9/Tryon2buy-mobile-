@@ -610,7 +610,7 @@ class _Card extends StatelessWidget {
                   const SizedBox(width: 10),
                 ],
                 Expanded(child: Text(title!, style: AppTypography.grotesk(size: 17, weight: FontWeight.w700))),
-                if (trailing != null) trailing!,
+                ?trailing,
               ],
             ),
             const SizedBox(height: 18),
