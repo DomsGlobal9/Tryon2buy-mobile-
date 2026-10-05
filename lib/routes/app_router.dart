@@ -20,6 +20,9 @@ import '../features/search/presentation/screens/search_screen.dart';
 import '../features/shell/presentation/screens/main_shell_screen.dart';
 import '../features/shop/data/shop_repository.dart';
 import '../features/splash/presentation/screens/splash_screen.dart';
+import '../features/tag_tryon/domain/tag_reference.dart';
+import '../features/tag_tryon/presentation/screens/client_tryon_screen.dart';
+import '../features/tag_tryon/presentation/screens/qr_scanner_screen.dart';
 import '../features/vendor/presentation/screens/vendor_gallery_screen.dart';
 import '../features/vendor/presentation/screens/vendor_workspace_screen.dart';
 
@@ -28,6 +31,8 @@ class AppRouter {
   static const String home = '/home';
   static const String welcome = '/welcome';
   static const String landing = '/landing';
+  static const String qrScanner = '/scan';
+  static const String clientTryon = '/try';
   static const String vendorLogin = '/vendor-login';
   static const String vendorSignup = '/vendor-signup';
   static const String signedOut = '/signed-out';
@@ -91,6 +96,19 @@ class AppRouter {
     );
   }
 
+  /// Opens the physical garment swing-tag QR scanner.
+  static Future<void> openQrScanner(BuildContext context) {
+    return Navigator.pushNamed(context, qrScanner);
+  }
+
+  /// Opens the client try-on screen for a scanned tag.
+  static Future<void> openClientTryon(
+    BuildContext context,
+    TagReference tag,
+  ) {
+    return Navigator.pushNamed(context, clientTryon, arguments: tag);
+  }
+
   /// Opens the business sign-in portal.
   ///
   /// By default a successful sign-in carries the user into their workspace
@@ -115,7 +133,49 @@ class AppRouter {
   }
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
-    switch (settings.name) {
+    final rawName = settings.name ?? '';
+    final uri = Uri.tryParse(rawName);
+    final path = uri != null && uri.path.isNotEmpty ? uri.path : rawName;
+
+    // ── Deep link dynamic routes (shared looks, merchant shops, tag QR) ──
+    if (path.startsWith('/tryon/')) {
+      final genId = path.substring('/tryon/'.length).trim();
+      if (genId.isNotEmpty) {
+        return AppPageRoute<dynamic>(
+          builder: (_) => CustomerTryonStudioScreen(generationId: genId),
+        );
+      }
+    }
+
+    if (path.startsWith('/shop/')) {
+      final vendorId = path.substring('/shop/'.length).trim();
+      if (vendorId.isNotEmpty) {
+        return AppPageRoute<dynamic>(
+          builder: (_) => VendorPublicShopScreen(vendorId: vendorId),
+        );
+      }
+    }
+
+    if (path.startsWith('/try/')) {
+      final tag = TagReference.parse(rawName) ?? TagReference.parse(path);
+      if (tag != null) {
+        return AppPageRoute<dynamic>(
+          builder: (_) => ClientTryonScreen(tag: tag),
+        );
+      }
+    }
+
+    if (path.startsWith('/solution/') && path.length > '/solution/'.length) {
+      final key = path.substring('/solution/'.length);
+      return AppPageRoute<dynamic>(builder: (_) => SolutionScreen(solutionKey: key));
+    }
+
+    if (path.startsWith('/journal/') && path.length > '/journal/'.length) {
+      final slug = path.substring('/journal/'.length);
+      return AppPageRoute<dynamic>(builder: (_) => JournalPostScreen(slug: slug));
+    }
+
+    switch (path) {
       case splash:
         return AppPageRoute<dynamic>(builder: (_) => const SplashScreen());
 
@@ -164,6 +224,18 @@ class AppRouter {
 
       case vendorWorkspace:
         return AppPageRoute<dynamic>(builder: (_) => const VendorWorkspaceScreen());
+
+      case qrScanner:
+        return AppPageRoute<dynamic>(builder: (_) => const QrScannerScreen());
+
+      case clientTryon:
+        final tag = settings.arguments as TagReference?;
+        if (tag == null) {
+          return AppPageRoute<dynamic>(builder: (_) => const QrScannerScreen());
+        }
+        return AppPageRoute<dynamic>(
+          builder: (_) => ClientTryonScreen(tag: tag),
+        );
 
       case vendorGallery:
         return AppPageRoute<dynamic>(builder: (_) => const VendorGalleryScreen());

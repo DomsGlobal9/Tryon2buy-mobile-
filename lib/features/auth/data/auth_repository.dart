@@ -72,6 +72,67 @@ class AuthRepository {
     await storage.setGuestMode(true);
   }
 
+  /// Fetches fresh vendor profile and business information from backend.
+  Future<ApiResponse<UserModel>> getProfile() async {
+    final response = await ApiClient.get<Map<String, dynamic>>(
+      ApiEndpoints.authVendorProfile,
+      role: AuthRole.vendor,
+    );
+
+    final data = response.data;
+    if (!response.success || data == null) {
+      return ApiResponse.failure(
+        response.error ?? 'Failed to fetch vendor profile',
+        statusCode: response.statusCode,
+      );
+    }
+
+    final storage = await LocalStorageService.getInstance();
+    final existing = storage.getVendorProfile() ?? <String, dynamic>{};
+    final merged = Map<String, dynamic>.from(existing)..addAll(data);
+    await storage.setVendorProfile(merged);
+    await AuthSession.instance.refresh();
+
+    final role = storage.getPortalType() == 'b2b' ? 'b2b_client' : 'merchant';
+    return ApiResponse.success(UserModel.fromJson(merged, role: role));
+  }
+
+  /// Updates vendor company name, business type, and contact mobile.
+  Future<ApiResponse<UserModel>> updateProfile({
+    String? companyName,
+    String? businessType,
+    String? mobileNumber,
+  }) async {
+    final body = <String, dynamic>{};
+    if (companyName != null) body['companyName'] = companyName;
+    if (businessType != null) body['businessType'] = businessType;
+    if (mobileNumber != null) body['mobileNumber'] = mobileNumber;
+
+    final response = await ApiClient.put<Map<String, dynamic>>(
+      ApiEndpoints.authVendorProfile,
+      body: body,
+      role: AuthRole.vendor,
+    );
+
+    final data = response.data;
+    if (!response.success || data == null) {
+      return ApiResponse.failure(
+        response.error ?? 'Failed to update vendor profile',
+        statusCode: response.statusCode,
+      );
+    }
+
+    final vendorData = (data['vendor'] as Map<String, dynamic>?) ?? data;
+    final storage = await LocalStorageService.getInstance();
+    final existing = storage.getVendorProfile() ?? <String, dynamic>{};
+    final merged = Map<String, dynamic>.from(existing)..addAll(vendorData);
+    await storage.setVendorProfile(merged);
+    await AuthSession.instance.refresh();
+
+    final role = storage.getPortalType() == 'b2b' ? 'b2b_client' : 'merchant';
+    return ApiResponse.success(UserModel.fromJson(merged, role: role));
+  }
+
   // ── Shared business-side flow ──────────────────────────────────────────
 
   Future<ApiResponse<UserModel>> _vendorAuth(

@@ -56,6 +56,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
   void _openDiscover() => _goToTab(1, AppRouter.catalog);
   void _openTryOn() => _goToTab(2, AppRouter.vendorWorkspace);
+  void _openScanTag() => AppRouter.openQrScanner(context);
   void _openMyLooks() => Navigator.pushNamed(context, AppRouter.customerLibrary);
   void _openProfile() => _goToTab(3, AppRouter.profile);
   void _openSearch() => AppRouter.openSearch(context);
@@ -119,6 +120,7 @@ class _LandingScreenState extends State<LandingScreen> {
                   RevealOnScroll(
                     child: QuickActionsRow(
                       onTryOn: _openTryOn,
+                      onScanTag: _openScanTag,
                       onCatalog: _openDiscover,
                       onMyLooks: _openMyLooks,
                     ),

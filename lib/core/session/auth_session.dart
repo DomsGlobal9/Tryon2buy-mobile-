@@ -62,6 +62,31 @@ class AuthSession extends ChangeNotifier {
 
   String? get vendorEmail => _asText(vendorProfile?['email']);
 
+  String? get vendorCompanyName => _asText(vendorProfile?['companyName']);
+
+  String? get vendorBusinessType => _asText(vendorProfile?['businessType']);
+
+  String? get vendorMobileNumber => _asText(
+        vendorProfile?['mobileNumber'] ??
+            vendorProfile?['mobile_number'] ??
+            vendorProfile?['phone'],
+      );
+
+  int get drapeCredits =>
+      _asInt(vendorProfile?['drapeCredits'] ?? vendorProfile?['drape_credits']);
+
+  int get userTryonCredits =>
+      _asInt(vendorProfile?['userTryonCredits'] ?? vendorProfile?['user_tryon_credits']);
+
+  int get bgChangeCredits =>
+      _asInt(vendorProfile?['bgChangeCredits'] ?? vendorProfile?['bg_change_credits']);
+
+  int get blouseChangeCredits =>
+      _asInt(vendorProfile?['blouseChangeCredits'] ?? vendorProfile?['blouse_change_credits']);
+
+  bool get isUnlimited =>
+      vendorProfile?['isUnlimited'] == true || vendorProfile?['is_unlimited'] == true;
+
   bool get isB2bPortal => _readable?.isB2bPortal ?? false;
 
   // ── Lifecycle ──────────────────────────────────────────────────────────
@@ -104,5 +129,12 @@ class AuthSession extends ChangeNotifier {
     if (value == null) return null;
     final text = value.toString().trim();
     return text.isEmpty ? null : text;
+  }
+
+  static int _asInt(Object? value) {
+    if (value == null) return 0;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
   }
 }

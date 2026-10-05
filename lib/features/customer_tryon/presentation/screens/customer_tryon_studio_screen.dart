@@ -12,6 +12,7 @@ import 'package:tryon2buy/core/session/auth_session.dart';
 import 'package:tryon2buy/core/theme/app_colors.dart';
 import 'package:tryon2buy/core/theme/app_typography.dart';
 import 'package:tryon2buy/core/utils/image_picker_helper.dart';
+import 'package:tryon2buy/core/utils/media_exporter.dart';
 import 'package:tryon2buy/core/utils/ui_helpers.dart';
 import 'package:tryon2buy/core/widgets/credit_dialogs.dart';
 import 'package:tryon2buy/core/widgets/empty_state_view.dart';
@@ -581,8 +582,11 @@ class _SuccessBody extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        if (state.current.generationId.isNotEmpty)
-          _ShareRow(generationId: state.current.generationId),
+        if (state.current.generationId.isNotEmpty || state.current.resultImageUrl.isNotEmpty)
+          _ShareRow(
+            generationId: state.current.generationId,
+            imageUrl: state.current.resultImageUrl,
+          ),
         const SizedBox(height: 18),
 
         // ── Your photo ─────────────────────────────────────────────
@@ -1294,11 +1298,15 @@ class _InkButton extends StatelessWidget {
   }
 }
 
-/// "Copy link" and "Open on web" for a finished look.
+/// Actions for a finished try-on look: Save to Photos, Share Image, Copy Link, Open on Web.
 class _ShareRow extends StatelessWidget {
   final String generationId;
+  final String imageUrl;
 
-  const _ShareRow({required this.generationId});
+  const _ShareRow({
+    required this.generationId,
+    required this.imageUrl,
+  });
 
   String get _link => ApiEndpoints.shareLink(generationId);
 
@@ -1318,33 +1326,80 @@ class _ShareRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ButtonStyle style() => OutlinedButton.styleFrom(
+    ButtonStyle primaryStyle() => ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          elevation: 0,
+        );
+
+    ButtonStyle secondaryStyle() => OutlinedButton.styleFrom(
           foregroundColor: AppColors.ink,
           side: BorderSide(color: AppColors.ink.withValues(alpha: 0.2)),
           padding: const EdgeInsets.symmetric(vertical: 10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         );
 
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => _copy(context),
-            icon: const Icon(Icons.link_rounded, size: 16),
-            label: Text('COPY LINK', style: AppTypography.monoLabel(size: 11.5)),
-            style: style(),
+        // Native OS Actions
+        if (imageUrl.isNotEmpty) ...[
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => MediaExporter.saveToGallery(context, imageUrl),
+                  icon: const Icon(Icons.download_rounded, size: 18),
+                  label: Text(
+                    'SAVE TO PHOTOS',
+                    style: AppTypography.monoLabel(size: 11.5).copyWith(color: Colors.white),
+                  ),
+                  style: primaryStyle(),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => MediaExporter.share(context, imageUrl),
+                  icon: const Icon(Icons.share_rounded, size: 18),
+                  label: Text(
+                    'SHARE IMAGE',
+                    style: AppTypography.monoLabel(size: 11.5).copyWith(color: Colors.white),
+                  ),
+                  style: primaryStyle(),
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => _open(context),
-            icon: const Icon(Icons.open_in_new_rounded, size: 16),
-            label: Text('OPEN ON WEB', style: AppTypography.monoLabel(size: 11.5)),
-            style: style(),
+          const SizedBox(height: 8),
+        ],
+
+        // Web Link Actions
+        if (generationId.isNotEmpty)
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _copy(context),
+                  icon: const Icon(Icons.link_rounded, size: 16),
+                  label: Text('COPY LINK', style: AppTypography.monoLabel(size: 11.5)),
+                  style: secondaryStyle(),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _open(context),
+                  icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                  label: Text('OPEN ON WEB', style: AppTypography.monoLabel(size: 11.5)),
+                  style: secondaryStyle(),
+                ),
+              ),
+            ],
           ),
-        ),
       ],
     );
   }
 }
+

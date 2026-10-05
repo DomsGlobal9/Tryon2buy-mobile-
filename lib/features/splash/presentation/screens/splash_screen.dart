@@ -84,7 +84,7 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
 
     // Backstop: whatever the bootstrap does, we are not sitting here longer.
-    _watchdogTimer = Timer(_watchdog, _leaveSplash);
+    _watchdogTimer = Timer(_watchdog, _forceLeaveSplash);
 
     _bootstrap();
   }
@@ -143,61 +143,89 @@ class _SplashScreenState extends State<SplashScreen>
   /// Hands off to the app. Safe to call repeatedly, from any trigger.
   Future<void> _leaveSplash() async {
     if (_completed || !mounted) return;
+
+    try {
+      final storage = LocalStorageService.readyInstance ??
+          await LocalStorageService.getInstance()
+              .timeout(_storageTimeout)
+              .catchError((Object _) => LocalStorageService());
+      if (!mounted || _completed) return;
+      _completed = true;
+      _watchdogTimer?.cancel();
+
+      final rawToken = storage.getVendorToken();
+      final vendorSignedIn = storage.isVendorSignedIn;
+      final isB2b = storage.isB2bPortal;
+      final isGuest = storage.isGuestMode();
+
+      // Hand the session the handle we already hold, so the first screen sees
+      // the real account without waiting on storage a second time.
+      try {
+        AuthSession.instance.adopt(storage);
+      } catch (e) {
+        debugPrint('[SplashScreen] AuthSession adopt failed: $e');
+      }
+
+      // A token past its `exp` is cleared from disk in the background. The
+      // routing decision above already treats it as signed out, so the app
+      // never acts on it even if the write lands late.
+      if (!vendorSignedIn && rawToken != null && rawToken.isNotEmpty) {
+        unawaited(AuthSession.instance.signOutVendor());
+      }
+
+      final String targetRoute;
+      if (vendorSignedIn) {
+        targetRoute = isB2b ? AppRouter.b2bDigitize : AppRouter.home;
+      } else if (isGuest) {
+        targetRoute = AppRouter.home;
+      } else {
+        // Fresh install, or signed out without guest mode: the website's
+        // landing hero with the guest, merchant and B2B doors.
+        targetRoute = AppRouter.welcome;
+      }
+
+      _navigate(targetRoute);
+    } catch (e, stack) {
+      debugPrint('[SplashScreen] Error leaving splash: $e\n$stack');
+      _forceLeaveSplash();
+    }
+  }
+
+  void _forceLeaveSplash() {
+    if (_completed || !mounted) return;
     _completed = true;
     _watchdogTimer?.cancel();
 
-    final storage = LocalStorageService.readyInstance ??
-        await LocalStorageService.getInstance()
-            .timeout(_storageTimeout)
-            .catchError((Object _) => LocalStorageService());
+    final storage = LocalStorageService.readyInstance;
+    final targetRoute = storage?.isVendorSignedIn == true
+        ? (storage!.isB2bPortal ? AppRouter.b2bDigitize : AppRouter.home)
+        : (storage?.isGuestMode() == true ? AppRouter.home : AppRouter.welcome);
+
+    _navigate(targetRoute);
+  }
+
+  void _navigate(String targetRoute) {
     if (!mounted) return;
 
-    // ── Nothing below this line may await ────────────────────────────────
-    // `_completed` is already set, so the watchdog is cancelled and the
-    // resume retry returns early. One await that never resolves — a wedged
-    // preferences channel on a cold start — would leave the user on a
-    // spinner with nothing left to rescue them. Every read here is a
-    // synchronous cache hit; the two writes are fire-and-forget.
-
-    final rawToken = storage.getVendorToken();
-    final vendorSignedIn = storage.isVendorSignedIn;
-    final isB2b = storage.isB2bPortal;
-    final isGuest = storage.isGuestMode();
-
-    // Hand the session the handle we already hold, so the first screen sees
-    // the real account without waiting on storage a second time.
-    AuthSession.instance.adopt(storage);
-
-    // A token past its `exp` is cleared from disk in the background. The
-    // routing decision above already treats it as signed out, so the app
-    // never acts on it even if the write lands late.
-    if (!vendorSignedIn && rawToken != null && rawToken.isNotEmpty) {
-      unawaited(AuthSession.instance.signOutVendor());
-    }
-
-    final String targetRoute;
-    if (vendorSignedIn) {
-      targetRoute = isB2b ? AppRouter.b2bDigitize : AppRouter.home;
-    } else if (isGuest) {
-      targetRoute = AppRouter.home;
-    } else {
-      // Fresh install, or signed out without guest mode: the website's
-      // landing hero with the guest, merchant and B2B doors.
-      targetRoute = AppRouter.welcome;
-    }
-
-    // Navigate after the current frame. Pushing during build/layout — or while
-    // the tree is detached mid-lifecycle-transition — is how you get a torn
-    // navigator or a silently dropped route.
-    SchedulerBinding.instance.addPostFrameCallback((_) {
+    void executePush() {
       if (!mounted) return;
+      try {
+        Navigator.of(context).pushReplacementNamed(targetRoute);
+      } catch (e) {
+        debugPrint('[SplashScreen] Navigation to $targetRoute failed: $e');
+        if (mounted) {
+          try {
+            Navigator.of(context).pushReplacementNamed(AppRouter.welcome);
+          } catch (_) {}
+        }
+      }
+    }
 
-      // If anything else already moved us off the splash, do nothing.
-      final route = ModalRoute.of(context);
-      if (route != null && !route.isCurrent) return;
-
-      Navigator.of(context).pushReplacementNamed(targetRoute);
-    });
+    if (SchedulerBinding.instance.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+      SchedulerBinding.instance.addPostFrameCallback((_) => executePush());
+    } else {
+      executePush();
+    }
   }
 
   @override

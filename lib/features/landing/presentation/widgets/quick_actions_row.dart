@@ -8,12 +8,14 @@ import '../../../../core/theme/app_typography.dart';
 /// their top destinations without making the user hunt in the tab bar.
 class QuickActionsRow extends StatelessWidget {
   final VoidCallback onTryOn;
+  final VoidCallback onScanTag;
   final VoidCallback onCatalog;
   final VoidCallback onMyLooks;
 
   const QuickActionsRow({
     super.key,
     required this.onTryOn,
+    required this.onScanTag,
     required this.onCatalog,
     required this.onMyLooks,
   });
@@ -21,7 +23,7 @@ class QuickActionsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
           Expanded(
@@ -30,6 +32,14 @@ class QuickActionsRow extends StatelessWidget {
               label: 'Try On',
               accent: true,
               onTap: onTryOn,
+            ),
+          ),
+          Expanded(
+            child: _QuickAction(
+              icon: Icons.qr_code_scanner_rounded,
+              label: 'Scan Tag',
+              highlightIcon: true,
+              onTap: onScanTag,
             ),
           ),
           Expanded(
@@ -56,6 +66,7 @@ class _QuickAction extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool accent;
+  final bool highlightIcon;
   final VoidCallback onTap;
 
   const _QuickAction({
@@ -63,6 +74,7 @@ class _QuickAction extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.accent = false,
+    this.highlightIcon = false,
   });
 
   @override
@@ -93,7 +105,9 @@ class _QuickAction extends StatelessWidget {
             child: Icon(
               icon,
               size: 24,
-              color: accent ? AppColors.brandOrange : AppColors.textPrimary,
+              color: accent
+                  ? AppColors.brandOrange
+                  : (highlightIcon ? AppColors.brandOrange : AppColors.textPrimary),
             ),
           ),
           const SizedBox(height: 8),

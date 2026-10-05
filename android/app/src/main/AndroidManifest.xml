@@ -1,5 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <!-- Cleartext HTTP (the emulator's http://10.0.2.2:4000) is allowed only by
          the debug manifest overlay in src/debug; release is HTTPS-only.
          Backup is off so the merchant JWT in shared_prefs never lands in cloud
@@ -9,7 +12,8 @@
         android:enableOnBackInvokedCallback="true"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:allowBackup="false">
+        android:allowBackup="false"
+        android:requestLegacyExternalStorage="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -27,9 +31,35 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="true" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- Android App Links (HTTPS & HTTP for tryon2buy.com and www.tryon2buy.com) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="tryon2buy.com" />
+                <data
+                    android:scheme="https"
+                    android:host="www.tryon2buy.com" />
+                <data
+                    android:scheme="http"
+                    android:host="tryon2buy.com" />
+                <data
+                    android:scheme="http"
+                    android:host="www.tryon2buy.com" />
+            </intent-filter>
+            <!-- Custom scheme tryon2buy:// -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="tryon2buy" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

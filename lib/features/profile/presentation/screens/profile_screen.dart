@@ -12,6 +12,7 @@ import '../../../../routes/app_router.dart';
 import '../../../auth/presentation/sign_out.dart';
 import '../../../shell/presentation/screens/main_shell_screen.dart';
 import '../../../vendor/presentation/merchant_portal.dart';
+import '../widgets/credit_balance_card.dart';
 
 /// The Profile tab: who is signed in, shortcuts to their stuff, the merchant
 /// and B2B portals, and support links.
@@ -71,10 +72,20 @@ class ProfileScreen extends StatelessWidget {
                 onSignIn: () => AppRouter.openSignIn(context),
                 onSignOut: () => _signOutVendor(context),
               ),
+              if (session.isVendorSignedIn) ...[
+                const SizedBox(height: 16),
+                CreditBalanceCard(session: session),
+              ],
               const SizedBox(height: 24),
 
               const _SectionLabel('Shopping'),
               _Group(children: [
+                _Tile(
+                  icon: Icons.qr_code_scanner_rounded,
+                  title: 'Scan Garment Tag',
+                  subtitle: 'Try on physical in-store garments via QR tag',
+                  onTap: () => AppRouter.openQrScanner(context),
+                ),
                 _Tile(
                   icon: Icons.collections_bookmark_outlined,
                   title: 'My Looks',
@@ -109,6 +120,22 @@ class ProfileScreen extends StatelessWidget {
                       : 'Digitize your catalog with AI model shots',
                   onTap: () => openMerchantPortal(context),
                 ),
+                if (session.isVendorSignedIn) ...[
+                  _Tile(
+                    icon: Icons.auto_awesome_motion_outlined,
+                    title: 'Digitize new garment',
+                    subtitle: 'Generate AI model shots from flat lays',
+                    onTap: () =>
+                        Navigator.pushNamed(context, AppRouter.b2bDigitize),
+                  ),
+                  _Tile(
+                    icon: Icons.inventory_2_outlined,
+                    title: 'Digitized product catalog',
+                    subtitle: 'View, share or manage your AI catalog items',
+                    onTap: () =>
+                        Navigator.pushNamed(context, AppRouter.b2bCatalog),
+                  ),
+                ],
                 if (!session.isVendorSignedIn)
                   _Tile(
                     icon: Icons.business_center_outlined,

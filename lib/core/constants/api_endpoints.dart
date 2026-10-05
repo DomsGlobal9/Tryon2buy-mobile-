@@ -157,4 +157,41 @@ class ApiEndpoints {
   /// Remove a single try-on result.
   static String dockResultDelete(String id) =>
       '$baseUrl/api/tryon/dock/results/$id';
+
+  // ── Scaleezy Inventory (garments reached by scanning a shop's tag) ────────
+  //
+  // A second backend, not ours. A scanned garment belongs to a shop in
+  // Inventory, and Inventory holds that shop's gateway key, so both the
+  // lookup and the generation go through it — exactly as the website's
+  // `ClientTryon` does. The app never holds a shop key.
+
+  /// Same default as the website's `INVENTORY_API_URL`; override with
+  /// `--dart-define=INVENTORY_API_BASE_URL=…`.
+  static final String inventoryBaseUrl = normalizeOrigin(
+    const String.fromEnvironment(
+      'INVENTORY_API_BASE_URL',
+      defaultValue: 'https://inventory-backend-1-ym8d.onrender.com',
+    ),
+  );
+
+  static String _inventoryTag(String clientId, String productCode) =>
+      '$inventoryBaseUrl/api/v1/public/tryon/'
+      '${Uri.encodeComponent(clientId)}/${Uri.encodeComponent(productCode)}';
+
+  /// The garment a tag names. [variant] is the colour the tag was tied to;
+  /// Inventory falls back to the cover photo when it does not know it.
+  static String inventoryGarment(
+    String clientId,
+    String productCode, {
+    String? variant,
+  }) {
+    final base = _inventoryTag(clientId, productCode);
+    return (variant == null || variant.isEmpty)
+        ? base
+        : '$base?variant=${Uri.encodeQueryComponent(variant)}';
+  }
+
+  /// Generates a try-on of the tagged garment, metered against that shop.
+  static String inventoryGenerate(String clientId, String productCode) =>
+      '${_inventoryTag(clientId, productCode)}/generate';
 }
